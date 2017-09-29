@@ -23,7 +23,7 @@ Portability
 -----------
 This has been written for the Arduino Mega 2560, the only Arduino sitting in my toolbox. This is definitely overkill. It should be possible to port to other AVR-based Arduino systems, such as the Arduino Uno based on the ATmega328P, because it shares all of the same comparator and capture functionality. The following registers are used in the Mega code but missing in the Uno, and would require removal or replacement:
 
-    COM1C0 COM3A0 COM3B0 COM3C0 CS30 DDRA DDRE DDRF DDRF DDRF DDRG DDRH DDRJ DDRK DDRL ICES3 ICNC3 MUX5 OCIE1C OCIE3A OCR3A PORTA PORTE PORTF PORTF PORTF PORTG PORTH PORTJ PORTK PORTL PRR0 PRR0 PRR0 PRR0 PRR1 PRR1 PRTIM3 TCCR3A TCCR3B TIMSK3 WGM30 WGM32
+    COM1C0 COM3A0 COM3B0 COM3C0 CS30 DDRA DDRE DDRF DDRG DDRH DDRJ DDRK DDRL ICES3 ICNC3 MUX5 OCIE1C OCIE3A OCR3A PORTA PORTE PORTF PORTG PORTH PORTJ PORTK PORTL PRR0 PRR1 PRTIM3 TCCR3A TCCR3B TIMSK3 WGM30 WGM32
 
 I'd be happy to write a port for anyone who sends me the hardware. I also take pull requests for ports.
 
