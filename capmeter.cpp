@@ -182,9 +182,9 @@ static void stop_capture() {
 static void print_si(float x) {
     static const char pre[] = "\0pnum kMG";
     const char *p = pre+5;
-    for (; x < 1 && p[1]; p--)
+    for (; x < 1 && p[-1]; p--)
         x *= 1e3;
-    for (; x >= 1e3 && p[-1]; p++)
+    for (; x >= 1e3 && p[1]; p++)
         x /= 1e3;
 
     uint8_t digs;
