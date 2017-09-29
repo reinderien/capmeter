@@ -16,7 +16,7 @@ struct {
     // min = 2^16/grow
     uint16_t min;      // ICR threshold below which range should grow
     
-    // grow = scale[n]/scale[n+1] * res[n+1]/res[n]
+    // grow = scale[n]/scale[n+1] * res[n+1]/res[n] (apply ceil)
     uint8_t grow;      // time factor between this range and next
 } static const ranges[] = {
     //   R  pres    CS pin   min  grow
@@ -24,9 +24,9 @@ struct {
     {  270,  256, B100, 1, 16384,    4},
     {  270,   64, B011, 1,  8192,    8},
     {  270,    8, B010, 1,  8192,    8},
-    {  270,    1, B001, 1, 14156,    4},
+    {  270,    1, B001, 1, 14156,    5},
     { 10e3,    8, B010, 2,  8192,    8},
-    { 10e3,    1, B001, 2,  5243,   12},
+    { 10e3,    1, B001, 2,  5243,   13},
     {  1e6,    8, B010, 4,  8192,    8},
     {  1e6,    1, B001, 4,     0, 0xFF}
 };
