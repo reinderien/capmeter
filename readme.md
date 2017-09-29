@@ -8,12 +8,12 @@ This capacitance meter is designed to be extremely cheap and quick to set up. As
 How do I set it up?
 -------------------
 
-1. Install the latest version of the Arduino IDE.
-2. Copy and paste the code into it.
-3. Connect your Arduino over USB.
-4. Select the appropriate port and board.
-5. Upload the code.
-6. Connect the three resistors as shown below. If you don't have exact values, you can substitute, but you need to modify the range struct as necessary.
+1. Connect the three resistors between pins 5/A0/A1/A2 as shown below. If you don't have exact values, you can substitute, but you need to modify the range struct as necessary. A breadboard will work but a project board with soldered connections will introduce less parasitic capacitance.
+2. Install the latest version of the Arduino IDE.
+3. Copy and paste the code into it.
+4. Connect your Arduino over USB.
+5. Select the appropriate port and board.
+6. Upload the code.
 
 How do I use it?
 ----------------
