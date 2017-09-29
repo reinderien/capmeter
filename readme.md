@@ -1,22 +1,26 @@
 What is this?
--------------
+=============
 
 This is a basic capacitance meter for use with the Arduino Mega. It could be ported to other platforms that are AVR-based, but this is one of the few Arduinos sitting in my toolbox, so I used it.
 
 This capacitance meter is designed to be extremely cheap and quick to set up. As such, it's not very accurate or stable, but it works. It has also been designed to be battery-friendly, taking advantage of several power-saving options in the AVR hardware. It does not use an integrated display; it uses your laptop to show output. It could be adapted to use a battery pack and an integrated display, or could be used as-is with a small tablet or cell phone capable of hosting USB serial TTY devices.
 
-How do I set it up?
--------------------
+Setup
+=====
 
-1. Connect the three resistors between pins 5/A0/A1/A2 as shown below. If you don't have exact values, you can substitute, but you need to modify the range struct as necessary. <em>For all connections try to use relatively short jumpers. A breadboard will work but a project board with soldered connections will introduce less parasitic capacitance. Parasitic or stray elements are not fatal, but will inflate measurements in the pF range. The board partially accommodates for this with the zeroing feature.</em>
+1. Connect the three resistors between pins 5/A0/A1/A2 as shown below. If you don't have exact values, you can substitute, but you need to modify the range struct as necessary.
 2. Install the latest version of the Arduino IDE.
 3. Copy and paste the code into it.
 4. Connect your Arduino over USB.
 5. Select the appropriate port and board.
 6. Upload the code.
 
-How do I use it?
-----------------
+A note on connections
+---------------------
+For all connections try to use relatively short jumpers. A breadboard will work but a project board with soldered connections will introduce less parasitic capacitance. Parasitic or stray elements are not fatal, but will inflate measurements in the pF range. The board partially accommodates for this with the zeroing feature.
+
+Usage
+=====
 1. Remove any existing capacitors from the measurement pins before boot (or reboot).
 2. Connect your Arduino over USB.
 3. Select the appropriate port and board.
@@ -24,6 +28,9 @@ How do I use it?
 5. Observe as the meter zeroes itself. My unloaded capacitance is usually about 50pF.
 6. Connect the capacitor to be measured as shown below.
 7. Observe as the meter converges on a capacitance value. Switching between large and small capacitors will take a few iterations for the auto-range to kick in completely.
+
+Design
+======
 
 Schematic
 ---------
@@ -131,5 +138,5 @@ Todo
 * Dynamic refresh rate using OC3 based on capacitance and discharge minima
 
 Discuss
--------
+=======
 [![Join the chat at https://gitter.im/capmeter/Lobby](https://badges.gitter.im/capmeter/Lobby.svg)](https://gitter.im/capmeter/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
