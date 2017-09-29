@@ -1,3 +1,23 @@
+What is this?
+-------------
+
+This is a basic capacitance meter for use with the Arduino Mega. It could be ported to other platforms that are AVR-based, but this is one of the few Arduinos sitting in my toolbox, so I used it.
+
+This capacitance meter is designed to be extremely cheap and quick to set up. As such, it's not very accurate or stable, but it works. It has also been designed to be battery-friendly. It does not use an integrated display; it uses your laptop to show output.
+
+How do I set it up?
+-------------------
+
+1. Install the latest version of the Arduino IDE.
+2. Copy and paste the code into it.
+3. Connect your Arduino over USB.
+4. Select the appropriate port and board.
+5. Upload the code.
+6. Connect the three resistors as shown below. If you don't have exact values, you can substitute, but you need to modify the range struct as necessary.
+7. Start the Arduino IDE's Serial Monitor. 
+8. Connect the capacitor to be measured as shown below. For all connections try to use relatively short jumpers, and avoid a breadboard if you can - otherwise you will be introducing more parasitic capacitance. It's not the end of the world, but it will affect capacitance measurements in the pF range.
+9. Observe as the meter converges on a capacitance value. Switching between large and small capacitors will take a couple of iterations for the auto-range to kick in completely.
+
 Schematic
 ---------
              | Arduino Mega
