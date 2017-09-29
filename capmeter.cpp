@@ -1,4 +1,4 @@
-#define DEBUG 1
+#define VERBOSE 1
 #define QUICK_RANGE 0  // Buggy
 
 struct {
@@ -179,16 +179,36 @@ static void stop_capture() {
     TCCR1B = 0; // Stop clock by setting CS1=000
 }
 
+static void print_si(float x) {
+    static const char pre[] = "\0pnum kMG";
+    const char *p = pre+5;
+    for (; x < 1 && p[1]; p--)
+        x *= 1e3;
+    for (; x >= 1e3 && p[-1]; p++)
+        x /= 1e3;
+
+    uint8_t digs;
+    if      (x >= 1e3) digs = 0;
+    else if (x >= 1e2) digs = 1;
+    else if (x >= 1e1) digs = 2;
+    else digs = 3;
+    Serial.print(x, digs);
+    Serial.print(*p);
+}
+
 static void print_cap(uint16_t timer) {
     const float taus = 1.514128, // ln(5/1.1)
-                t = ((float)timer)/F_CPU*ranges[r_index].prescale,
+                f = F_CPU/ranges[r_index].prescale,
+                t = ((float)timer)/f,
                 R = ranges[r_index].R;
     float C = t/taus/R;
 
-    const static char pre[] = " munp";
-    const char *p;
-    for (p = pre; C < 1 && p[1]; p++)
-        C *= 1e3;
+    #if VERBOSE
+    Serial.print("f="); print_si(f); Serial.print("Hz ");
+    Serial.print("t="); print_si(t); Serial.print("s ");
+    Serial.print("timer="); Serial.print(timer, DEC); Serial.print(' ');
+    Serial.print("R="); print_si(R); Serial.print("Ω ");
+    #endif
 
     Serial.print('C');
     if (timer == 0xFFFF) {
@@ -199,15 +219,7 @@ static void print_cap(uint16_t timer) {
         Serial.print('=');
         PORTB |= B10000000; // Set LED if we've measured a capacitance
     }
-    Serial.print(C,3);
-    Serial.print(*p);
-    Serial.println('F');
-}
-
-static void dump(uint16_t timer) {
-    Serial.print("r_index="); Serial.print(r_index, DEC);
-    Serial.print(" ICR1="); Serial.print(timer, DEC);
-    Serial.print(' ');
+    print_si(C); Serial.println('F');
 }
 
 static void charge() {
@@ -229,7 +241,7 @@ static void discharge() {
 }
 
 static void rerange(uint16_t timer) {
-    #if QUICK_RANGE
+    #if QUICK_RANGE // kind of broken
     {
         if (timer == 0xFFFF) { // overflow
             if (r_index > 1) 
@@ -277,10 +289,6 @@ void loop() {
             
         discharge();
 
-        #if DEBUG
-        dump(timer);
-        #endif
-        
         print_cap(timer);
         rerange(timer);
         while (!refresh_ready)
