@@ -69,7 +69,7 @@ We don't want to go too much higher, because that will affect the refresh
 rate of the result. We can improve discharge speed by decreasing R, but it
 cannot go so low that the current exceeds the pin max.
 
-The minimum capacitance) is when R is maximal, the prescaler is minimal
+The minimum capacitance is when R is maximal, the prescaler is minimal
 and the timer value is minimal:
 1/16e6 / 1M / 1.514 = 0.041 pF
 but practical limitations of this hardware will not do anything useful
