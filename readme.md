@@ -3,7 +3,7 @@ What is this?
 
 This is a basic capacitance meter for use with the Arduino Mega. It could be ported to other platforms that are AVR-based, but this is one of the few Arduinos sitting in my toolbox, so I used it.
 
-This capacitance meter is designed to be extremely cheap and quick to set up. As such, it's not very accurate or stable, but it works. It has also been designed to be battery-friendly. It does not use an integrated display; it uses your laptop to show output.
+This capacitance meter is designed to be extremely cheap and quick to set up. As such, it's not very accurate or stable, but it works. It has also been designed to be battery-friendly, taking advantage of several power-saving options in the AVR hardware. It does not use an integrated display; it uses your laptop to show output. It could be adapted to use a battery pack and an integrated display, or could be used as-is with a small tablet or cell phone capable of hosting USB serial TTY devices.
 
 How do I set it up?
 -------------------
