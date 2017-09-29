@@ -29,6 +29,8 @@ static const uint8_t n_ranges = sizeof(ranges)/sizeof(*ranges);
 static uint8_t r_index = 4;
 static uint16_t captured;
 static volatile bool refresh_ready = false, measured = false;
+static bool zeroed = false;
+static float zerocap;
 
 
 static void setup_power() {
@@ -201,13 +203,35 @@ static void print_cap(uint16_t timer) {
                 f = F_CPU/ranges[r_index].prescale,
                 t = ((float)timer)/f,
                 R = ranges[r_index].R;
+    
     float C = t/taus/R;
+    if (!zeroed) {
+        if (r_index == n_ranges-1 && C < 100e-12) {
+            zerocap = C;
+            #if VERBOSE
+            {
+                Serial.print("Zeroing to ");
+                print_si(zerocap);
+                Serial.println('F');
+            }
+            #endif
+            zeroed = true;
+        }
+    }
+    if (zeroed) {
+        C -= zerocap;
+        if (C < 0) C = 0;
+    }
+        
 
     #if VERBOSE
-    Serial.print("f="); print_si(f); Serial.print("Hz ");
-    Serial.print("t="); print_si(t); Serial.print("s ");
-    Serial.print("timer="); Serial.print(timer, DEC); Serial.print(' ');
-    Serial.print("R="); print_si(R); Serial.print("Ω ");
+    {
+        Serial.print("r_index="); Serial.print(r_index, DEC); Serial.print(' ');
+        Serial.print("f="); print_si(f); Serial.print("Hz ");
+        Serial.print("t="); print_si(t); Serial.print("s ");
+        Serial.print("timer="); Serial.print(timer, DEC); Serial.print(' ');
+        Serial.print("R="); print_si(R); Serial.print("Ω ");
+    }
     #endif
 
     Serial.print('C');
