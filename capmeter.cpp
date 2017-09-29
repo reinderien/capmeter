@@ -1,5 +1,9 @@
 // See https://github.com/reinderien/capmeter
 
+#ifndef __AVR_ATmega2560__
+#error Arduino Mega 2560 required. For others, contact the author or take care during porting.
+#endif
+
 #define VERBOSE 1
 #define QUICK_RANGE 0  // Buggy
 
