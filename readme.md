@@ -119,8 +119,9 @@ link-time optimization is enabled, don't dump the .o; dump the .elf. Something l
 Todo
 ----
 
-* Add a zeroing routine on reset
-* Disable the comparator via ACSR.ACD between measurements
+* Maybe disable the comparator via ACSR.ACD between measurements to save power - currently won't work
+* Maybe tweak the autorange algo or enable "fast" - currently barfs sometimes
+* Dynamic refresh rate using OC3 based on capacitance and discharge minima
 
 Discuss
 -------
