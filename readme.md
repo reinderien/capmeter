@@ -1,7 +1,7 @@
-What is this?
-=============
+Introduction
+============
 
-This is a basic capacitance meter for use with the Arduino Mega. It could be ported to other platforms that are AVR-based, but this is one of the few Arduinos sitting in my toolbox, so I used it.
+This is a basic capacitance meter for use with the Arduino.
 
 This capacitance meter is designed to be extremely cheap and quick to set up. As such, it's not very accurate or stable, but it works. It has also been designed to be battery-friendly, taking advantage of several power-saving options in the AVR hardware. It does not use an integrated display; it uses your laptop to show output. It could be adapted to use a battery pack and an integrated display, or could be used as-is with a small tablet or cell phone capable of hosting USB serial TTY devices.
 
@@ -18,6 +18,10 @@ Setup
 A note on connections
 ---------------------
 For all connections try to use relatively short jumpers. A breadboard will work but a project board with soldered connections will introduce less parasitic capacitance. Parasitic or stray elements are not fatal, but will inflate measurements in the pF range. The board partially accommodates for this with the zeroing feature.
+
+Portability
+-----------
+This has been written for the Arduino Mega 2560, the only Arduino sitting in my toolbox. This is definitely overkill. It should be relatively painless to port to other AVR-based Arduino systems, such as the Arduino Uno based on the ATmega328P, because it shares all of the same comparator and capture functionality. I'd be happy to write a port for anyone who sends me the hardware. I also take pull requests for ports.
 
 Usage
 =====
