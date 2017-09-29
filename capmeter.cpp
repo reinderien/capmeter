@@ -1,3 +1,5 @@
+// See https://github.com/reinderien/capmeter
+
 #define VERBOSE 1
 #define QUICK_RANGE 0  // Buggy
 
@@ -166,7 +168,8 @@ static void start_capture() {
     // Todo - this needs some work
     // ACSR &= ~(1 << ACD); // Enable comparator
     
-    TCNT1 = 0;    // Clear timer value
+    PRR0 &= ~(1 << PRTIM1); // Turn on power for T1
+    TCNT1 = 0;              // Clear timer value
     // CS1 prescaler is based on the selected range
     TCCR1B = (0 << ICNC1)   | // Disable noise cancellation
              (1 << ICES1)   | // ICP rising edge
@@ -179,6 +182,7 @@ static void stop_capture() {
     // ACSR |= 1 << ACD; // Disable comparator
     
     TCCR1B = 0; // Stop clock by setting CS1=000
+    PRR0 |= 1 << PRTIM1; // Turn off power for T1
 }
 
 static void print_si(float x) {
