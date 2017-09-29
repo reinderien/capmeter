@@ -8,7 +8,7 @@ This capacitance meter is designed to be extremely cheap and quick to set up. As
 How do I set it up?
 -------------------
 
-1. Connect the three resistors between pins 5/A0/A1/A2 as shown below. If you don't have exact values, you can substitute, but you need to modify the range struct as necessary. <em style="color: #808080">For all connections try to use relatively short jumpers. A breadboard will work but a project board with soldered connections will introduce less parasitic capacitance. Parasitic or stray elements are not fatal, but will inflate measurements in the pF range. The board partially accommodates for this with the zeroing feature.</em>
+1. Connect the three resistors between pins 5/A0/A1/A2 as shown below. If you don't have exact values, you can substitute, but you need to modify the range struct as necessary. <em>For all connections try to use relatively short jumpers. A breadboard will work but a project board with soldered connections will introduce less parasitic capacitance. Parasitic or stray elements are not fatal, but will inflate measurements in the pF range. The board partially accommodates for this with the zeroing feature.</em>
 2. Install the latest version of the Arduino IDE.
 3. Copy and paste the code into it.
 4. Connect your Arduino over USB.
@@ -23,7 +23,7 @@ How do I use it?
 4. Start the Arduino IDE's Serial Monitor. Set the monitor to 115200 baud.
 5. Observe as the meter zeroes itself. My unloaded capacitance is usually about 50pF.
 6. Connect the capacitor to be measured as shown below.
-7. Observe as the meter converges on a capacitance value. Switching between large and small capacitors will take a few of iterations for the auto-range to kick in completely.
+7. Observe as the meter converges on a capacitance value. Switching between large and small capacitors will take a few iterations for the auto-range to kick in completely.
 
 Schematic
 ---------
