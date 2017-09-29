@@ -14,7 +14,7 @@ How do I set it up?
 4. Select the appropriate port and board.
 5. Upload the code.
 6. Connect the three resistors as shown below. If you don't have exact values, you can substitute, but you need to modify the range struct as necessary.
-7. Start the Arduino IDE's Serial Monitor. 
+7. Start the Arduino IDE's Serial Monitor. Set the monitor to 115200 baud.
 8. Connect the capacitor to be measured as shown below. For all connections try to use relatively short jumpers, and avoid a breadboard if you can - otherwise you will be introducing more parasitic capacitance. It's not the end of the world, but it will affect capacitance measurements in the pF range.
 9. Observe as the meter converges on a capacitance value. Switching between large and small capacitors will take a couple of iterations for the auto-range to kick in completely.
 
