@@ -1,6 +1,8 @@
 What is this?
 -------------
 
+[![Join the chat at https://gitter.im/capmeter/Lobby](https://badges.gitter.im/capmeter/Lobby.svg)](https://gitter.im/capmeter/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 This is a basic capacitance meter for use with the Arduino Mega. It could be ported to other platforms that are AVR-based, but this is one of the few Arduinos sitting in my toolbox, so I used it.
 
 This capacitance meter is designed to be extremely cheap and quick to set up. As such, it's not very accurate or stable, but it works. It has also been designed to be battery-friendly. It does not use an integrated display; it uses your laptop to show output.
