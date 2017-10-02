@@ -1,4 +1,5 @@
 // See https://github.com/reinderien/capmeter
+// This is the original version - half-second update, fairly cautious about power usage.
 
 #ifndef __AVR_ATmega2560__
 #error Arduino Mega 2560 required. For others, contact the author or take care during porting.
