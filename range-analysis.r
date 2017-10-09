@@ -1,4 +1,4 @@
-#!/usr/bin/R -q -f
+#!/usr/bin/R -q --vanilla -f
 
 library(ggplot2)
 library(scales)
@@ -30,7 +30,7 @@ Cmax = (timermax*s/f/taustable) %*% (1/R)
 # Based on a timer count of 1, min caps for each R and s
 Cmin = (s/f/taurise) %*% (1/R)
 
-# various E12 capacitors over the full range
+# various E12-series capacitors over the full range
 C = matrix(10^seq(-14, -2, by=1/12))
 rownames(C) = C  # sprintf('%.2e', C)
 
@@ -46,15 +46,14 @@ timer = drop((f*tm) %o% (1/s))
 # Adapted from https://stackoverflow.com/questions/30179442
 log_breaks = function(maj, radix=10) {
   function(x) {
-    minx = floor(min(logb(x,radix), na.rm=T)) - 1
-    maxx = ceiling(max(logb(x,radix), na.rm=T)) + 1
+    minx = floor(min(logb(x, radix), na.rm=T)) - 1
+    maxx = ceiling(max(logb(x, radix), na.rm=T)) + 1
     n_major = maxx - minx + 1
     major_breaks = seq(minx, maxx, by=1)
     if (maj) {
       breaks = major_breaks
     } else {
-      steps = logb(1:(radix-1),radix)
-      breaks = rep(steps, times=n_major) +
+      breaks = rep(logb(1:(radix-1), radix), times=n_major) +
                rep(major_breaks, each=radix-1)
     }
     radix^breaks
@@ -88,11 +87,17 @@ ggplot(tm_df, aes(x=C, y=t, colour=R, group=R)) +
 tmr_df = as.data.frame.table(timer)
 colnames(tmr_df) = c('C', 'R', 's', 'timer')
 tmr_df$C = as.numeric(levels(tmr_df$C))[tmr_df$C]
-ggplot(tmr_df, aes(x=C, y=timer, colour=R,
-                   linetype=s, group=interaction(R,s))) +
+
+maxdf = as.data.frame.table(drop(replicate(2, timermax)))
+colnames(maxdf) = c('s', 'C', 'timer')
+levels(maxdf$C) = c(1e-14, 1e-2)
+maxdf$C = as.numeric(levels(maxdf$C))[maxdf$C]
+
+ggplot(data=tmr_df, aes(x=C, y=timer, linetype=s)) +
    ggtitle(bquote(paste('Timer against R and C for ',
                         t/tau == .(taustable)))) +
-   geom_line() +
+   geom_line(aes(colour=R, group=interaction(R,s))) +
+   geom_line(data=maxdf, aes(group=s)) +
    scale_x_log_eng() +
    scale_y_log_eng(radix=4, limits=2^c(-1,17)) +
    theme(axis.text.x=element_text(angle=90))
