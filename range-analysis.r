@@ -53,9 +53,7 @@ log_breaks = function(maj, radix=10) {
     if (maj) {
       breaks = major_breaks
     } else {
-      if (radix == 2) {
-        steps = logb(8:15,2) - 3
-      } else steps = logb(1:(radix-1),radix)
+      steps = logb(1:(radix-1),radix)
       breaks = rep(steps, times=n_major) +
                rep(major_breaks, each=radix-1)
     }
@@ -98,5 +96,5 @@ ggplot(tmr_df, aes(x=C, y=timer, colour=R,
                         t/tau == .(taustable)))) +
    geom_line() +
    scale_x_log_eng() +
-   scale_y_log_eng(radix=2, limits=2^c(-1,17)) +
+   scale_y_log_eng(radix=4, limits=2^c(-1,17)) +
    theme(axis.text.x=element_text(angle=90))
