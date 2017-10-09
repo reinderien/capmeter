@@ -22,14 +22,10 @@ rownames(s) = s
 # minimum timer resolution and then optimize for fastest time,
 # or choose a maximum time and then optimize for highest resolution.
 tmax = 0.5
+timermax = pmin(tmax*f/s, 2^16-1)
 
-# Based on the max time, max caps for each R
-Cmax_time = tmax/taustable/R
-Cmax_time_compare = t(replicate(length(s), as.vector(Cmax_time)))
-
-# Based on the max timer, max caps for each R and s
-Cmax_timer = ((2^16 - 1)*s/f/taustable) %*% (1/R)
-Cmax = pmin(Cmax_timer, Cmax_time_compare)
+# Based on the max time and timer, max caps for each R and s
+Cmax = (timermax*s/f/taustable) %*% (1/R)
 
 # Based on a timer count of 1, min caps for each R and s
 Cmin = (s/f/taurise) %*% (1/R)
