@@ -46,9 +46,9 @@ timer = drop((f*tm) %o% (1/s))
 # Adapted from https://stackoverflow.com/questions/30179442
 log_breaks = function(maj, radix=10) {
   function(x) {
-    minx         = floor(min(logb(x,radix), na.rm=T)) - 1
-    maxx         = ceiling(max(logb(x,radix), na.rm=T)) + 1
-    n_major      = maxx - minx + 1
+    minx = floor(min(logb(x,radix), na.rm=T)) - 1
+    maxx = ceiling(max(logb(x,radix), na.rm=T)) + 1
+    n_major = maxx - minx + 1
     major_breaks = seq(minx, maxx, by=1)
     if (maj) {
       breaks = major_breaks
@@ -61,14 +61,12 @@ log_breaks = function(maj, radix=10) {
   }
 }
 scale_x_log_eng = function(..., radix=10) {
-  scale_x_continuous(...,
-                     trans=log_trans(radix),
+  scale_x_continuous(..., trans=log_trans(radix),
                      breaks=log_breaks(TRUE, radix),
                      minor_breaks=log_breaks(FALSE, radix))
 }
 scale_y_log_eng = function(..., radix=10) {
-  scale_y_continuous(...,
-                     trans=log_trans(radix),
+  scale_y_continuous(..., trans=log_trans(radix),
                      breaks=log_breaks(TRUE, radix),
                      minor_breaks=log_breaks(FALSE, radix))
 }
