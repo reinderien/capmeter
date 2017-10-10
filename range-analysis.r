@@ -22,7 +22,7 @@ rownames(s) = s
 # To choose the various scales, either we want to choose a
 # minimum timer resolution and then optimize for fastest time,
 # or choose a maximum time and then optimize for highest resolution.
-tmax = 0.2
+tmax = 0.262144 # allows for nice range endings at a timer of 0xFFFF
 timermax = pmin(tmax*f/s, 2^16-1)
 
 # Based on the max time and timer, max caps for each R and s
@@ -45,6 +45,48 @@ tmrcompare = aperm(drop(replicate(length(C),
                    c(3,2,1))
 timer[timer>tmrcompare | timer<1] = NA
 
+# To perform actual range selection:
+# There is only one range selected for every C.
+# For each C, select the R and s for which:
+#   t < tmax
+#   1 <= timer < 2^16
+#   timer is maximal
+# critical points are for each C where:
+#   timer crosses 1 or 2^16
+#   t crosses tmax
+# 6 = t/RC = tim*s/RC/16MHz
+# C = t/6R = tim*s/6R/16MHz
+# Ccrit = tmax/6R = 2^16*s/6R/16MHz
+crit = expand.grid(R=R,s=s)
+Ccrit = with(crit, c(s/f/R, 2^16*s/f/R, tmax/R))/taustable
+crit = expand.grid(R=R, s=s, C=Ccrit)
+crit$t = with(crit, taustable*R*C)
+crit$tmr = with(crit, t*f/s)
+eps=1e-6
+crit = crit[crit$tmr>=1-eps &
+            crit$tmr<=2^16+eps &
+            (crit$t<=tmax+eps | crit$R==R[1]),]
+crit = crit[with(crit, order(-C, -tmr)),]
+rownames(crit) = 1:(nrow(crit))
+# We now need pairs of R&s: the first being either the extreme lowest C or the
+# C where the previous range cut out; and the second being the maximum
+# condition.
+ranges = tail(crit, 1)
+repeat {
+   prev = tail(ranges, 1)
+   # Find the furthest row with the same R and s
+   edge = crit[which(crit$R==prev$R & crit$s==prev$s)[1],]
+   ranges = rbind(ranges, edge)
+   # Find the (different) row with the same C and the highest timer
+   samec = crit[which(crit$C == edge$C &
+                      crit$tmr < 2^16-eps &
+                      (crit$t < tmax-eps | crit$R==R[1])),][1,]
+   if (is.na(samec$R)) break
+   ranges = rbind(ranges, samec)
+}
+print(ranges)
+
+
 # Plot utilities ###########################################################
 
 # Adapted from https://stackoverflow.com/questions/30179442
@@ -66,13 +108,13 @@ log_breaks = function(maj, radix=10) {
 # See https://github.com/tidyverse/ggplot2/blob/master/R/scale-continuous.r#L160
 scale_x_log_eng = function(..., radix=10) {
   scale_x_continuous(..., trans=log_trans(radix),
-                     breaks=log_breaks(TRUE, radix),
-                     minor_breaks=log_breaks(FALSE, radix))
+                     breaks=log_breaks(T, radix),
+                     minor_breaks=log_breaks(F, radix))
 }
 scale_y_log_eng = function(..., radix=10) {
   scale_y_continuous(..., trans=log_trans(radix),
-                     breaks=log_breaks(TRUE, radix),
-                     minor_breaks=log_breaks(FALSE, radix))
+                     breaks=log_breaks(T, radix),
+                     minor_breaks=log_breaks(F, radix))
 }
 
 
