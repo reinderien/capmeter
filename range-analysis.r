@@ -59,6 +59,7 @@ log_breaks = function(maj, radix=10) {
     radix^breaks
   }
 }
+# See https://github.com/tidyverse/ggplot2/blob/master/R/scale-continuous.r#L160
 scale_x_log_eng = function(..., radix=10) {
   scale_x_continuous(..., trans=log_trans(radix),
                      breaks=log_breaks(TRUE, radix),
@@ -88,16 +89,17 @@ tmr_df = as.data.frame.table(timer)
 colnames(tmr_df) = c('C', 'R', 's', 'timer')
 tmr_df$C = as.numeric(levels(tmr_df$C))[tmr_df$C]
 
-maxdf = as.data.frame.table(drop(replicate(2, timermax)))
-colnames(maxdf) = c('s', 'C', 'timer')
-levels(maxdf$C) = c(1e-14, 1e-2)
-maxdf$C = as.numeric(levels(maxdf$C))[maxdf$C]
+maxdf = data.frame(timer=timermax, s=factor(s))
+maxnames = data.frame(C=1e-14, s=factor(s), timer=timermax)
 
 ggplot(data=tmr_df, aes(x=C, y=timer, linetype=s)) +
    ggtitle(bquote(paste('Timer against R and C for ',
                         t/tau == .(taustable)))) +
    geom_line(aes(colour=R, group=interaction(R,s))) +
-   geom_line(data=maxdf, aes(group=s)) +
+   geom_hline(data=maxdf, aes(yintercept=timer, linetype=s, group=s)) +
+   geom_text(data=maxnames, size=3,
+      aes(group=s, label=paste('max=',timer),
+          hjust='left', vjust=-0.5)) +
    scale_x_log_eng() +
    scale_y_log_eng(radix=4, limits=2^c(-1,17)) +
    theme(axis.text.x=element_text(angle=90))
