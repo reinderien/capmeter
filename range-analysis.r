@@ -21,7 +21,7 @@ rownames(s) = s
 # To choose the various scales, either we want to choose a
 # minimum timer resolution and then optimize for fastest time,
 # or choose a maximum time and then optimize for highest resolution.
-tmax = 0.1
+tmax = 0.25
 timermax = pmin(tmax*f/s, 2^16-1)
 
 # Based on the max time and timer, max caps for each R and s
@@ -39,8 +39,10 @@ tm = taustable*C %*% R
 
 # The stabilization timer value is three-dimensional, over C, R, and s.
 timer = drop((f*tm) %o% (1/s))
-timer[timer<1 | timer >= 2^16] = NA
-
+tmrcompare = aperm(drop(replicate(length(C),
+                                  replicate(length(R), timermax))),
+                   c(3,2,1))
+timer[timer>tmrcompare | timer<1] = NA
 
 # Plot utilities ###########################################################
 
