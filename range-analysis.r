@@ -62,7 +62,7 @@ Ccrit = with(crit, c(s/f/R, 2^16*s/f/R, tmax/R))/taustable
 crit = expand.grid(R=R, s=s, C=Ccrit)
 crit$t = with(crit, taustable*R*C)
 crit$tmr = with(crit, t*f/s)
-eps=1e-6
+eps=1e-6  # epsilon tolerance required to accommodate for float error
 crit = crit[crit$tmr>=1-eps &
             crit$tmr<=2^16+eps &
             (crit$t<=tmax+eps | crit$R==R[1]),]
@@ -124,7 +124,7 @@ scale_y_log_eng = function(..., radix=10) {
 tm_df = as.data.frame.table(tm)
 colnames(tm_df) = c('C', 'R', 't')
 tm_df$C = as.numeric(levels(tm_df$C))[tm_df$C]
-ggplot(data=tm_df, aes(x=C, y=t)) +
+ggplot(tm_df, aes(x=C, y=t)) +
    ggtitle(bquote(paste('Stabilisation time against R and C for ',
                         t/tau == .(taustable)))) +
    geom_line(aes(colour=R, group=R)) +
@@ -143,8 +143,8 @@ tmr_df$C = as.numeric(levels(tmr_df$C))[tmr_df$C]
 maxdf = data.frame(timer=timermax, s=factor(s))
 maxnames = data.frame(C=1e-14, s=factor(s), timer=timermax)
 
-ggplot(data=tmr_df, aes(x=C, y=timer, linetype=s)) +
-   ggtitle(bquote(paste('Timer against R and C for ',
+ggplot(tmr_df, aes(x=C, y=timer, linetype=s)) +
+   ggtitle(bquote(paste('Timer against prescaler, R and C for ',
                         t/tau == .(taustable)))) +
    geom_line(aes(colour=R, group=interaction(R,s))) +
    geom_hline(data=maxdf, aes(yintercept=timer, linetype=s, group=s)) +
@@ -153,3 +153,19 @@ ggplot(data=tmr_df, aes(x=C, y=timer, linetype=s)) +
    scale_x_log_eng() +
    scale_y_log_eng(radix=4, limits=2^c(0,16)) +
    theme(axis.text.x=element_text(angle=90))
+
+
+# At the bottom end, cut off at typical parasitic capacitance
+ranges[ranges$tmr==1,] = data.frame(R=1e6, s=1, C=50e-12,
+                                    t=taustable*1e6*50e-12,
+                                    tmr=taustable*1e6*50e-12*f)
+ranges$s = factor(ranges$s)
+ranges$R = factor(ranges$R)
+ggplot(ranges, aes(x=C, y=tmr, colour=R, linetype=s,
+                   group=interaction(R,s))) +
+   ggtitle(bquote(paste('Timer against prescaler, R and C for ',
+                        t/tau == .(taustable), ' (chosen ranges)'))) +
+   geom_line() +
+   scale_x_log_eng() + scale_y_log_eng(radix=2) +
+   theme(axis.text.x=element_text(angle=90))
+
