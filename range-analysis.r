@@ -30,8 +30,8 @@ Cmax = (timermax*s/f/taustable) %*% (1/R)
 # Based on a timer count of 1, min caps for each R and s
 Cmin = (s/f/taurise) %*% (1/R)
 
-# various E12-series capacitors over the full range
-C = matrix(10^seq(-14, -2, by=1/12))
+# various capacitors over the full range
+C = matrix(10^seq(-14, -2, by=1/24))
 rownames(C) = C  # sprintf('%.2e', C)
 
 # The stabilization time is two-dimensional, over C and R.
@@ -39,6 +39,7 @@ tm = taustable*C %*% R
 
 # The stabilization timer value is three-dimensional, over C, R, and s.
 timer = drop((f*tm) %o% (1/s))
+timer[timer<1 | timer >= 2^16] = NA
 
 
 # Plot utilities ###########################################################
@@ -104,5 +105,5 @@ ggplot(data=tmr_df, aes(x=C, y=timer, linetype=s)) +
    geom_text(data=maxnames, size=3,
       aes(label=paste('max=',timer), hjust='left', vjust=-0.5, group=s)) +
    scale_x_log_eng() +
-   scale_y_log_eng(radix=4, limits=2^c(-1,17)) +
+   scale_y_log_eng(radix=4, limits=2^c(0,16)) +
    theme(axis.text.x=element_text(angle=90))
