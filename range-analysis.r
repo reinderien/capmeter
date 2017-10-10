@@ -22,6 +22,7 @@ rownames(s) = s
 # To choose the various scales, either we want to choose a
 # minimum timer resolution and then optimize for fastest time,
 # or choose a maximum time and then optimize for highest resolution.
+# Here we're doing the latter.
 tmax = 0.262144 # allows for nice range endings at a timer of 0xFFFF
 timermax = pmin(tmax*f/s, 2^16-1)
 
@@ -63,21 +64,21 @@ crit = expand.grid(R=R, s=s, C=Ccrit)
 crit$t = with(crit, taustable*R*C)
 crit$tmr = with(crit, t*f/s)
 eps=1e-6  # epsilon tolerance required to accommodate for float error
+# Only keep conformant rows.
 crit = crit[crit$tmr>=1-eps &
             crit$tmr<=2^16+eps &
             (crit$t<=tmax+eps | crit$R==R[1]),]
 crit = crit[with(crit, order(-C, -tmr)),]
-rownames(crit) = 1:(nrow(crit))
-# We now need pairs of R&s: the first being either the extreme lowest C or the
-# C where the previous range cut out; and the second being the maximum
-# condition.
+# We now need pairs of R&s: the first in each pair being either the extreme
+# lowest C or the C where the previous range cut out; and the second being the
+# maximum condition.
 ranges = tail(crit, 1)
+samec = ranges
 repeat {
-   prev = tail(ranges, 1)
    # Find the furthest row with the same R and s
-   edge = crit[which(crit$R==prev$R & crit$s==prev$s)[1],]
+   edge = crit[which(crit$R==samec$R & crit$s==samec$s)[1],]
    ranges = rbind(ranges, edge)
-   # Find the (different) row with the same C and the highest timer
+   # Find the (different, conformant) row with the same C and the highest timer
    samec = crit[which(crit$C == edge$C &
                       crit$tmr < 2^16-eps &
                       (crit$t < tmax-eps | crit$R==R[1])),][1,]
@@ -96,7 +97,7 @@ log_breaks = function(maj, radix=10) {
     minx = floor(min(logb(x, radix), na.rm=T)) - 1
     maxx = ceiling(max(logb(x, radix), na.rm=T)) + 1
     n_major = maxx - minx + 1
-    major_breaks = seq(minx, maxx, by=1)
+    major_breaks = minx:maxx
     if (maj) {
       breaks = major_breaks
     } else {
@@ -117,6 +118,9 @@ scale_y_log_eng = function(..., radix=10) {
                      breaks=log_breaks(T, radix),
                      minor_breaks=log_breaks(F, radix))
 }
+xaxis_text_vert = function() {
+  theme(axis.text.x=element_text(angle=90))
+}
 
 
 # Plotting #################################################################
@@ -130,10 +134,9 @@ ggplot(tm_df, aes(x=C, y=t)) +
    geom_line(aes(colour=R, group=R)) +
    geom_hline(aes(yintercept=tmax)) +
    geom_text(data=data.frame(), size=3,
-      aes(x=1e-14, y=tmax, label=paste('max=', tmax),
-          hjust='left', vjust=-0.5)) +
-   scale_x_log_eng() + scale_y_log_eng() +
-   theme(axis.text.x=element_text(angle=90))
+             aes(x=1e-14, y=tmax, label=paste('max=', tmax),
+                 hjust='left', vjust=-0.5)) +
+   scale_x_log_eng() + scale_y_log_eng() + xaxis_text_vert()
 
 
 tmr_df = as.data.frame.table(timer)
@@ -150,9 +153,8 @@ ggplot(tmr_df, aes(x=C, y=timer, linetype=s)) +
    geom_hline(data=maxdf, aes(yintercept=timer, linetype=s, group=s)) +
    geom_text(data=maxnames, size=3,
       aes(label=paste('max=',timer), hjust='left', vjust=-0.5, group=s)) +
-   scale_x_log_eng() +
-   scale_y_log_eng(radix=4, limits=2^c(0,16)) +
-   theme(axis.text.x=element_text(angle=90))
+   scale_x_log_eng() + xaxis_text_vert() +
+   scale_y_log_eng(radix=4, limits=2^c(0,16))
 
 
 # At the bottom end, cut off at typical parasitic capacitance
@@ -166,6 +168,6 @@ ggplot(ranges, aes(x=C, y=tmr, colour=R, linetype=s,
    ggtitle(bquote(paste('Timer against prescaler, R and C for ',
                         t/tau == .(taustable), ' (chosen ranges)'))) +
    geom_line() +
-   scale_x_log_eng() + scale_y_log_eng(radix=2) +
-   theme(axis.text.x=element_text(angle=90))
+   scale_x_log_eng() + xaxis_text_vert() +
+   scale_y_log_eng(radix=2)
 
