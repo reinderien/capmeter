@@ -84,6 +84,7 @@ repeat {
    if (is.na(samec$R)) break
    ranges = rbind(ranges, samec)
 }
+rownames(ranges) = 1:(nrow(ranges))
 print(ranges)
 
 
