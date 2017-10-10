@@ -21,7 +21,7 @@ rownames(s) = s
 # To choose the various scales, either we want to choose a
 # minimum timer resolution and then optimize for fastest time,
 # or choose a maximum time and then optimize for highest resolution.
-tmax = 0.5
+tmax = 0.1
 timermax = pmin(tmax*f/s, 2^16-1)
 
 # Based on the max time and timer, max caps for each R and s
@@ -77,10 +77,14 @@ scale_y_log_eng = function(..., radix=10) {
 tm_df = as.data.frame.table(tm)
 colnames(tm_df) = c('C', 'R', 't')
 tm_df$C = as.numeric(levels(tm_df$C))[tm_df$C]
-ggplot(tm_df, aes(x=C, y=t, colour=R, group=R)) +
+ggplot(data=tm_df, aes(x=C, y=t)) +
    ggtitle(bquote(paste('Stabilisation time against R and C for ',
                         t/tau == .(taustable)))) +
-   geom_line() +
+   geom_line(aes(colour=R, group=R)) +
+   geom_hline(aes(yintercept=tmax)) +
+   geom_text(data=data.frame(), size=3,
+      aes(x=1e-14, y=tmax, label=paste('max=', tmax),
+          hjust='left', vjust=-0.5)) +
    scale_x_log_eng() + scale_y_log_eng() +
    theme(axis.text.x=element_text(angle=90))
 
@@ -98,8 +102,7 @@ ggplot(data=tmr_df, aes(x=C, y=timer, linetype=s)) +
    geom_line(aes(colour=R, group=interaction(R,s))) +
    geom_hline(data=maxdf, aes(yintercept=timer, linetype=s, group=s)) +
    geom_text(data=maxnames, size=3,
-      aes(group=s, label=paste('max=',timer),
-          hjust='left', vjust=-0.5)) +
+      aes(label=paste('max=',timer), hjust='left', vjust=-0.5, group=s)) +
    scale_x_log_eng() +
    scale_y_log_eng(radix=4, limits=2^c(-1,17)) +
    theme(axis.text.x=element_text(angle=90))
