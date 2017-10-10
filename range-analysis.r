@@ -1,4 +1,5 @@
 #!/usr/bin/R -q --vanilla -f
+options(echo=F)
 
 library(ggplot2)
 library(scales)
@@ -21,7 +22,7 @@ rownames(s) = s
 # To choose the various scales, either we want to choose a
 # minimum timer resolution and then optimize for fastest time,
 # or choose a maximum time and then optimize for highest resolution.
-tmax = 0.25
+tmax = 0.2
 timermax = pmin(tmax*f/s, 2^16-1)
 
 # Based on the max time and timer, max caps for each R and s
