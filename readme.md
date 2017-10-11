@@ -117,7 +117,9 @@ Minimum R is based on the max pin "test" current of 20mA (absolute max 40mA).
 title="5V/20mA = 250R ~ 270R" />
 
 Choose maximum R based on the impedance of the pins and susceptibility to noise.
-Anywhere above 1M doesn't work well.
+The ATMega specsheet lists a leakage current of up to 1μA at 5.5V, equivalent to
+a minimum input impedance of 5.5MΩ - so a drive resistor anywhere above 1MΩ
+doesn't work well.
 
 For good range coverage, having an intermediate resistor is useful. This
 resistor should be close to the geometric mean of the other two:
