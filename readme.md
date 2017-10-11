@@ -139,12 +139,16 @@ We don't want to go too much higher, because that will affect the refresh
 rate of the result. We can improve discharge speed by decreasing R, but it
 cannot go so low that the current exceeds the pin max.
 
-The minimum capacitance is when R is maximal, the prescaler is minimal
-and the timer value is minimal:
-1/16e6 / 1M / 1.514 = 0.041 pF
+The theoretical minimum capacitance is when R is maximal, the prescaler is minimal,
+the timer value is minimal and we measure on the rising edge:
+
+<img src="https://latex.codecogs.com/gif.latex?\frac%7B1%7D%7B-16\textup%7BMHz%7D\cdot1M\Omega\cdot%20ln\left(1-1.1/5\right)%7D\approx0.25\textup%7BpF%7D"
+title="1/16MHz/1M/-ln(1-1.1/5) ~ 0.25pF" />
+
 but practical limitations of this hardware will not do anything useful
 for such a small capacitance. Parasitics alone are much higher than that.
-Just plugging a wire into my breadboard introduced 10pF.
+Just plugging a wire into my breadboard introduced 10pF, and my typical
+unloaded capacitance is 50pF.
 
 To determine when to switch ranges, aim for a charge timer that runs up
 to somewhere near the 16-bit capacity to get decent resolution, choosing a
