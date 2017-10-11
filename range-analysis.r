@@ -10,7 +10,7 @@ library(scales)
 # taus = t/RC
 # t = timer*s/f
 
-R = t(c(270, 10e3, 1e6))    # all drive resistors
+R = t(c(270, 15e3, 1e6))    # all drive resistors
 colnames(R) = R
 taustable = 7               # taus to stabilization
 taufall = -log(1.1/5)       # taus from 5V to 1.1V
