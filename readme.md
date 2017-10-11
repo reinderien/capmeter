@@ -126,6 +126,9 @@ To determine when to switch ranges, aim for a charge timer that runs up
 to somewhere near the 16-bit capacity to get decent resolution, choosing a
 good combination of R and prescaler.
 
+For more justification of the range choices, run range-analysis.r and check
+out the graphs it produces.
+
 Reference links
 ---------------
 
