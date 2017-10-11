@@ -105,7 +105,10 @@ Lower R is necessary to speed up charge for high capacitance.
 Too fast, and max capacitance will suffer.
 Too slow, and update speed will suffer.
 Minimum R is based on the max pin "test" current of 20mA (absolute max 40mA).
-5V/20mA = 250R, so use something bigger than that, like 270R.
+
+<img src="https://latex.codecogs.com/gif.latex?\frac%7B5V%7D%7B20mA%7D=250\Omega\approx270\Omega"
+title="5V/20mA = 250R ~ 270R" />
+
 Choose maximum R based on the impedance of the pins and susceptibility to
 noise. Anywhere above 1M doesn't work well.
 
