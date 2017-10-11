@@ -79,7 +79,7 @@ Schematic
     |--------|  5      PE3/AIN1 -comptor    in
     |        |
     |-270R---| A0      PF0      (dis)charge out or Z
-    |--10k---| A1      PF1      (dis)charge out or Z
+    |--15k---| A1      PF1      (dis)charge out or Z
     |---1M---| A2      PF2      (dis)charge out or Z
              |
              |  0      PE0/RXD0 UART rx     in
