@@ -100,6 +100,13 @@ title="tfall/tau = -ln(1.1/5) ~ 1.514" />
 <img src="https://latex.codecogs.com/gif.latex?\frac%7Bt_%7Brise%7D%7D\tau=-ln\left(1-\frac%7B1.1%7D%7B5%7D\right)\approx0.2485"
 title="trise/tau = -ln(1-1.1/5) ~ 0.2485" />
 
+We must also be careful to allow the capacitor to fully discharge between each
+measurement. A conservative 7tau discharge will certainly get below the noise
+floor:
+
+<img src="https://latex.codecogs.com/gif.latex?e^%7B-7%7D\approx0.1\%%"
+title="e^-7 ~ 0.1%" />
+
 Higher R slows down charge for small capacitance.
 Lower R is necessary to speed up charge for high capacitance.
 Too fast, and max capacitance will suffer.
