@@ -112,6 +112,11 @@ title="5V/20mA = 250R ~ 270R" />
 Choose maximum R based on the impedance of the pins and susceptibility to
 noise. Anywhere above 1M doesn't work well.
 
+For good range coverage, having an intermediate resistor is useful. This resistor
+should be close to the geometric mean of the other two:
+
+<img src="https://latex.codecogs.com/gif.latex?\sqrt%7B\left(1M\Omega\right)\left(270\Omega\right)%7D\approx16.43k\Omega\approx15k\Omega" title="sqrt(1M*270) ~ 16.43k ~ 15k" />
+
 Board has a 16MHz xtal connected to XTAL1/2. Timer 1 is 16-bit.
 We can switch between prescalers of 1, 8, 64, 256 and 1024 based on
 capacitance.
