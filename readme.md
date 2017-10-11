@@ -93,7 +93,8 @@ Calculations
 Digital I/O pins are 5V.
 Using an internal reference voltage of 1.1V for the comparator, the capture
 time to charge in tau-units is:
-ln(5/1.1) = 1.514
+
+<img src="https://latex.codecogs.com/gif.latex?\frac%7Bt_%7Bfall%7D%7D\tau=ln\left(\frac%7B5%7D%7B1.1%7D\right)\approx1.514" title="tfall/tau = ln(5/1.1) ~ 1.514" />
 
 Higher R slows down charge for small capacitance.
 Lower R is necessary to speed up charge for high capacitance.
