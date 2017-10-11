@@ -91,8 +91,8 @@ Calculations
 ------------
 
 Digital I/O pins are 5V.
-Using an internal reference voltage of 1.1V for the comparator, the capture
-time to charge in tau-units is:
+Using an internal reference voltage of 1.1V for the comparator, the capture time
+to charge in tau-units is:
 
 <img src="https://latex.codecogs.com/gif.latex?\frac%7Bt_%7Bfall%7D%7D\tau=-ln\left(\frac%7B1.1%7D%7B5%7D\right)\approx1.514"
 title="tfall/tau = -ln(1.1/5) ~ 1.514" />
@@ -116,18 +116,17 @@ Minimum R is based on the max pin "test" current of 20mA (absolute max 40mA).
 <img src="https://latex.codecogs.com/gif.latex?\frac%7B5V%7D%7B20mA%7D=250\Omega\approx270\Omega"
 title="5V/20mA = 250R ~ 270R" />
 
-Choose maximum R based on the impedance of the pins and susceptibility to
-noise. Anywhere above 1M doesn't work well.
+Choose maximum R based on the impedance of the pins and susceptibility to noise.
+Anywhere above 1M doesn't work well.
 
-For good range coverage, having an intermediate resistor is useful. This resistor
-should be close to the geometric mean of the other two:
+For good range coverage, having an intermediate resistor is useful. This
+resistor should be close to the geometric mean of the other two:
 
 <img src="https://latex.codecogs.com/gif.latex?\sqrt%7B\left(1M\Omega\right)\left(270\Omega\right)%7D\approx16.43k\Omega\approx15k\Omega"
 title="sqrt(1M*270) ~ 16.43k ~ 15k" />
 
 Board has a 16MHz xtal connected to XTAL1/2. Timer 1 is 16-bit.
-We can switch between prescalers of 1, 8, 64, 256 and 1024 based on
-capacitance.
+We can switch between prescalers of 1, 8, 64, 256 and 1024 based on capacitance.
 
 The maximum capacitance measured is when R is minimal, the prescaler is maximal,
 the timer value is maximal, and discharge has stabilised:
@@ -135,27 +134,27 @@ the timer value is maximal, and discharge has stabilised:
 <img src="https://latex.codecogs.com/gif.latex?\frac%7B2^%7B16%7D\cdot1024%7D%7B16\textup%7BMHz%7D\cdot270\cdot7%7D\approx2.2\textup%7BmF%7D"
 title="2^16*1024/16MHz/270/7 ~ 2.2mF" />
 
-We don't want to go too much higher, because that will affect the refresh
-rate of the result. We can improve discharge speed by decreasing R, but it
-cannot go so low that the current exceeds the pin max.
+We don't want to go too much higher, because that will affect the refresh rate
+of the result. We can improve discharge speed by decreasing R, but it cannot go
+so low that the current exceeds the pin max.
 
-The theoretical minimum capacitance is when R is maximal, the prescaler is minimal,
-the timer value is minimal and we measure on the rising edge:
+The theoretical minimum capacitance is when R is maximal, the prescaler is
+minimal, the timer value is minimal and we measure on the rising edge:
 
 <img src="https://latex.codecogs.com/gif.latex?\frac%7B1%7D%7B-16\textup%7BMHz%7D\cdot1M\Omega\cdot%20ln\left(1-1.1/5\right)%7D\approx0.25\textup%7BpF%7D"
 title="1/16MHz/1M/-ln(1-1.1/5) ~ 0.25pF" />
 
-but practical limitations of this hardware will not do anything useful
-for such a small capacitance. Parasitics alone are much higher than that.
-Just plugging a wire into my breadboard introduced 10pF, and my typical
-unloaded capacitance is 50pF.
+but practical limitations of this hardware will not do anything useful for such
+a small capacitance. Parasitics alone are much higher than that. Just plugging a
+wire into my breadboard introduced 10pF, and my typical unloaded capacitance is
+50pF.
 
-To determine when to switch ranges, aim for a charge timer that runs up
-to somewhere near the 16-bit capacity to get decent resolution, choosing a
-good combination of R and prescaler.
+To determine when to switch ranges, aim for a charge timer that runs up to
+somewhere near the 16-bit capacity to get decent resolution, choosing a good
+combination of R and prescaler.
 
-For more justification of the range choices, run range-analysis.r and check
-out the graphs it produces.
+For more justification of the range choices, run range-analysis.r and check out
+the graphs it produces.
 
 Reference links
 ---------------
