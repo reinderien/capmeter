@@ -105,7 +105,7 @@ static void setup_refresh() {
 static void setup_serial() {
     PRR0 &= ~(1 << PRUSART0); // Power up USART0 for output to USB over pins 0+1
     Serial.begin(115200);     // UART at 115200 baud
-    #if DEBUG
+    #if VERBOSE
     Serial.println("Initialized");
     #endif
 }
