@@ -68,7 +68,9 @@ eps=1e-6  # epsilon tolerance required to accommodate for float error
 crit = crit[crit$tmr>=1-eps &
             crit$tmr<=2^16+eps &
             (crit$t<=tmax+eps | crit$R==R[1]),]
-crit = crit[with(crit, order(-C, -tmr)),]
+# Suitability of every range at a certain C is determined mainly by the highest
+# timer but also by the lowest time.
+crit = crit[with(crit, order(-C, -tmr^3/t)),]
 # We now need pairs of R&s: the first in each pair being either the extreme
 # lowest C or the C where the previous range cut out; and the second being the
 # maximum condition.
@@ -81,6 +83,7 @@ repeat {
    # Find the (different, conformant) row with the same C and the highest timer
    samec = crit[which(crit$C == edge$C &
                       crit$tmr < 2^16-eps &
+                      crit$R <= edge$R &
                       (crit$t < tmax-eps | crit$R==R[1])),][1,]
    if (is.na(samec$R)) break
    ranges = rbind(ranges, samec)
