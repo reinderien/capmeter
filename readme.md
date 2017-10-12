@@ -180,12 +180,13 @@ hardware/arduino/avr/cores/arduino/main.cpp
 
 The include chain is:
 
-    Arduino.h
-      avr/io.h
-        avr/sfr_defs.h
-        Based on -mmcu=atmega2560, __AVR_ATmega2560__ is defined
-        avr/iom2560.h
-          iomxx0_1.h - this has most of the interesting SFR defs
+* Arduino.h
+  * [avr/io.h](https://github.com/vancegroup-mirrors/avr-libc/blob/master/avr-libc/include/avr/io.h)
+    * [avr/sfr_defs.h](https://github.com/vancegroup-mirrors/avr-libc/blob/master/avr-libc/include/avr/sfr_defs.h)
+      ; based on -mmcu=atmega2560, \_\_AVR_ATmega2560\_\_ is defined
+    * [avr/iom2560.h](https://github.com/vancegroup-mirrors/avr-libc/blob/master/avr-libc/include/avr/iom2560.h)
+      * [avr/iomxx0\_1.h](https://github.com/vancegroup-mirrors/avr-libc/blob/master/avr-libc/include/avr/iomxx0_1.h) -
+        this has most of the interesting SFR defs
       
 We need to use a lot of the SFRs directly.
 
