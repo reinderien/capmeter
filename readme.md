@@ -178,7 +178,8 @@ Compilation notes
 -----------------
 
 The actual entry point is main() in here (ignoring the bootloader):
-hardware/arduino/avr/cores/arduino/main.cpp
+
+[hardware/arduino/avr/cores/arduino/main.cpp](https://github.com/arduino/Arduino/blob/master/hardware/arduino/avr/cores/arduino/main.cpp)
 
 The include chain is:
 
