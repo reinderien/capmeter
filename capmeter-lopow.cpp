@@ -6,7 +6,6 @@
 #endif
 
 #define VERBOSE 1
-#define QUICK_RANGE 0  // Buggy
 
 struct {
     float R;           // Resistor driven for this range
@@ -14,22 +13,19 @@ struct {
     uint8_t CS;        // CS1 bits to select this prescaler
     uint8_t pin_mask;  // PORTF mask for driving resistor
     
-    // min = 2^16/grow
+    // min = floor[2^16/(pres[n]/pres[n+1] * res[n+1]/res[n])]
     uint16_t min;      // ICR threshold below which range should grow
-    
-    // grow = scale[n]/scale[n+1] * res[n+1]/res[n] (apply ceil)
-    uint8_t grow;      // time factor between this range and next
 } static const ranges[] = {
-    //   R  pres    CS pin   min  grow
-    {  270, 1024, B101, 1, 16384,    4},
-    {  270,  256, B100, 1, 16384,    4},
-    {  270,   64, B011, 1,  8192,    8},
-    {  270,    8, B010, 1,  8192,    8},
-    {  270,    1, B001, 1, 14156,    5},
-    { 10e3,    8, B010, 2,  8192,    8},
-    { 10e3,    1, B001, 2,  5243,   13},
-    {  1e6,    8, B010, 4,  8192,    8},
-    {  1e6,    1, B001, 4,     0, 0xFF}
+    //   R  pres    CS pin   min
+    {  270, 1024, B101, 1, 16384},
+    {  270,  256, B100, 1, 16384},
+    {  270,   64, B011, 1,  8192},
+    {  270,    8, B010, 1,  8192},
+    {  270,    1, B001, 1,  9437},
+    { 15e3,    8, B010, 2,  8192},
+    { 15e3,    1, B001, 2,  7864},
+    {  1e6,    8, B010, 4,  8192},
+    {  1e6,    1, B001, 4,     0}
 };
 
 static const uint8_t n_ranges = sizeof(ranges)/sizeof(*ranges);
@@ -274,31 +270,14 @@ static void discharge() {
 }
 
 static void rerange(uint16_t timer) {
-    #if QUICK_RANGE // kind of broken
-    {
-        if (timer == 0xFFFF) { // overflow
-            if (r_index > 1) 
-                r_index = 1; // Quick-adjust to a fast timescale
-            else if (r_index > 0)
-                r_index--;
-        }
-        else {
-            for (; timer < ranges[r_index].min; timer *= ranges[r_index].grow)
-                r_index++;
-        }
+    if (timer == 0xFFFF) { // overflow
+        if (r_index > 0)
+            r_index--;
     }
-    #else
-    {
-        if (timer == 0xFFFF) { // overflow
-            if (r_index > 0)
-                r_index--;
-        }
-        else { // increase for better resolution
-            if (timer < ranges[r_index].min)
-                r_index++; 
-        }
+    else { // increase for better resolution
+        if (timer < ranges[r_index].min)
+            r_index++; 
     }
-    #endif
 }
 
 void setup() {
