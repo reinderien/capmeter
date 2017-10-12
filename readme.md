@@ -161,16 +161,18 @@ the graphs it produces.
 Reference links
 ---------------
 
-Store: https://store.arduino.cc/usa/arduino-mega-2560-rev3 (but I have a rev2)
+[Store](https://store.arduino.cc/usa/arduino-mega-2560-rev3) - This sells the
+rev3, but I have a rev2.
 
-Board: (R2 is closer to the R1 than the R3. The R3 was released in Nov 2011.)
-https://www.arduino.cc/en/uploads/Main/arduino-mega2560-schematic.pdf
+[Board](https://www.arduino.cc/en/uploads/Main/arduino-mega2560-schematic.pdf) -
+This is the R1 schematic. My R2 is closer to the R1 than the R3. The R3 was
+released in Nov 2011.
 
-API: https://www.arduino.cc/en/Reference/HomePage
+[API](https://www.arduino.cc/en/Reference/HomePage)
 
-Chip: http://www.microchip.com/wwwproducts/en/ATmega2560
+[Chip brief](http://www.microchip.com/wwwproducts/en/ATmega2560)
 
-Spec: http://ww1.microchip.com/downloads/en/DeviceDoc/Atmel-2549-8-bit-AVR-Microcontroller-ATmega640-1280-1281-2560-2561_datasheet.pdf
+[Chip spec](http://ww1.microchip.com/downloads/en/DeviceDoc/Atmel-2549-8-bit-AVR-Microcontroller-ATmega640-1280-1281-2560-2561_datasheet.pdf)
 
 Compilation notes
 -----------------
