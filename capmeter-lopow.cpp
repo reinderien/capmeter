@@ -9,23 +9,24 @@
 
 struct {
     float R;           // Resistor driven for this range
-    uint16_t prescale; // Timer 1 prescale factor
-    uint8_t CS;        // CS1 bits to select this prescaler
     uint8_t pin_mask;  // PORTF mask for driving resistor
     
-    // min = floor[2^16/(pres[n]/pres[n+1] * res[n+1]/res[n])]
+    uint16_t prescale; // Timer 1 prescale factor
+    uint8_t CS;        // CS1 bits to select this prescaler
+    
+    // min = floor(2^16 * pres[n+1]/pres[n] * R[n]/R[n+1])
     uint16_t min;      // ICR threshold below which range should grow
 } static const ranges[] = {
-    //   R  pres    CS pin   min
-    {  270, 1024, B101, 1, 16384},
-    {  270,  256, B100, 1, 16384},
-    {  270,   64, B011, 1,  8192},
-    {  270,    8, B010, 1,  8192},
-    {  270,    1, B001, 1,  9437},
-    { 15e3,    8, B010, 2,  8192},
-    { 15e3,    1, B001, 2,  7864},
-    {  1e6,    8, B010, 4,  8192},
-    {  1e6,    1, B001, 4,     0}
+    //  R pin  pres    CS    min
+    {  270, 1, 1024, B101, 16384},
+    {  270, 1,  256, B100, 16384},
+    {  270, 1,   64, B011,  8192},
+    {  270, 1,    8, B010,  8192},
+    {  270, 1,    1, B001,  9437},
+    { 15e3, 2,    8, B010,  8192},
+    { 15e3, 2,    1, B001,  7864},
+    {  1e6, 4,    8, B010,  8192},
+    {  1e6, 4,    1, B001,     0}
 };
 
 static const uint8_t n_ranges = sizeof(ranges)/sizeof(*ranges);
