@@ -115,11 +115,13 @@ static void setup_comptor() {
     + connected to bandgap ref via ACSR.ACBG=1
     - connected to AIN1 (PE3 "pin 5") via ADCSRB.ACME=0
     ACO output connected via ACIC=1 to input capture
+    Since the ACIS edge selector appears after ACO, and ACO itself is sent to
+    capture, and we don't use the AC interrupt itself, ACIS should not matter.
     
     Internal bandgap ref:
     stability described in ch12.3, p60
     shown as 1.1V in ch31.5, p360
-     */
+    */
     ACSR = (0 << ACD)  | // comparator enabled
            (1 << ACBG) | // select 1.1V bandgap ref for +
            (0 << ACO)  | // output - no effect
@@ -148,12 +150,11 @@ static void setup_capture() {
     Timer 1, ch17, p133
     16-bit counter
     fclkI/O is described in ch10.2.2 p39
-    The Arduino source configures this for "8-bit phase-correct PWM mode"
+    The Arduino source (wiring.c) configures this for "8-bit phase-correct PWM mode"
     but let's go ahead and ignore that
     */
-   
-    PRR0 &= ~(1 << PRTIM1); // Turn on power for T1
     
+    PRR0 &= ~(1 << PRTIM1); // Turn on power for T1
     TIMSK1 = (1 << ICIE1)  | // enable capture interrupt
              (0 << OCIE1C) | // disable output compare interrupts
              (0 << OCIE1B) |
@@ -163,7 +164,7 @@ static void setup_capture() {
              (B00 << COM1B0) |
              (B00 << COM1C0) |
              (B00 << WGM10);  // Normal count up, no clear (p145)
-    // Leave TCCR1B until we start capture
+    // Leave TCCR1B until we start capture and choose a prescaler
 }
 
 static void start_capture() {
@@ -195,11 +196,10 @@ static void print_si(float x) {
     for (; x >= 1e3 && p[1]; p++)
         x /= 1e3;
 
-    uint8_t digs;
-    if      (x >= 1e3) digs = 0;
-    else if (x >= 1e2) digs = 1;
-    else if (x >= 1e1) digs = 2;
-    else digs = 3;
+    uint8_t digs = 3;
+    for (float xsig = x; xsig > 1; xsig /= 10)
+        digs--;
+
     Serial.print(x, digs);
     Serial.print(*p);
 }
@@ -228,15 +228,14 @@ static void print_cap(uint16_t timer) {
         C -= zerocap;
         if (C < 0) C = 0;
     }
-        
-
+    
     #if VERBOSE
     {
         Serial.print("r_index="); Serial.print(r_index, DEC); Serial.print(' ');
         Serial.print("f="); print_si(f); Serial.print("Hz ");
         Serial.print("t="); print_si(t); Serial.print("s ");
         Serial.print("timer="); Serial.print(timer, DEC); Serial.print(' ');
-        Serial.print("R="); print_si(R); Serial.print("Ω ");
+        Serial.print("R="); print_si(R); Serial.print("ohm ");
     }
     #endif
 
@@ -255,6 +254,7 @@ static void print_cap(uint16_t timer) {
 static void charge() {
     DDRF = ranges[r_index].pin_mask; // All inputs except current R
     
+    // reset the timer value
     start_capture();
     
     // Start charging the cap
@@ -323,3 +323,5 @@ ISR(TIMER1_OVF_vect) { // timer overflow (took too long to charge)
     captured = 0xFFFF;
     measured = true;
 }
+
+

@@ -23,7 +23,7 @@ rownames(s) = s
 # minimum timer resolution and then optimize for fastest time,
 # or choose a maximum time and then optimize for highest resolution.
 # Here we're doing the latter.
-tmax = 0.262144 # allows for nice range endings at a timer of 0xFFFF
+tmax = 4e-6 * 2^16          # allows for nice range endings at a timer of 0xFFFF
 timermax = pmin(tmax*f/s, 2^16-1)
 
 # Based on the max time and timer, max caps for each R and s
