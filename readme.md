@@ -50,7 +50,8 @@ pull requests for ports.
 Usage
 =====
 1. Remove any existing capacitors from the measurement pins before boot (or
-   reboot).
+   reboot), while leaving attached any leads you anticipate using to connect to
+   capacitors.
 2. Connect your Arduino over USB.
 3. Select the appropriate port and board.
 4. Start the Arduino IDE's Serial Monitor. Set the monitor to 115200 baud.
@@ -97,16 +98,6 @@ to charge in tau-units is:
 <img src="https://latex.codecogs.com/gif.latex?\frac%7Bt_%7Bfall%7D%7D\tau=-ln\left(\frac%7B1.1%7D%7B5%7D\right)\approx1.514"
 title="tfall/tau = -ln(1.1/5) ~ 1.514" />
 
-<img src="https://latex.codecogs.com/gif.latex?\frac%7Bt_%7Brise%7D%7D\tau=-ln\left(1-\frac%7B1.1%7D%7B5%7D\right)\approx0.2485"
-title="trise/tau = -ln(1-1.1/5) ~ 0.2485" />
-
-We must also be careful to allow the capacitor to fully discharge between each
-measurement. A conservative 7tau discharge will certainly get below the noise
-floor:
-
-<img src="https://latex.codecogs.com/gif.latex?e^%7B-7%7D\approx0.1\%%"
-title="e^-7 ~ 0.1%" />
-
 Higher R slows down charge for small capacitance.
 Lower R is necessary to speed up charge for high capacitance.
 Too fast, and max capacitance will suffer.
@@ -139,6 +130,13 @@ title="2^16*1024/16MHz/270/7 ~ 2.2mF" />
 We don't want to go too much higher, because that will affect the refresh rate
 of the result. We can improve discharge speed by decreasing R, but it cannot go
 so low that the current exceeds the pin max.
+
+Ideally, we would allow the capacitor to fully discharge between each
+measurement. Currently, the refresh time is hard-coded at 500ms, so for 
+discharge to 1% or better, the measured capacitor would be at most:
+
+<img src="http://latex.codecogs.com/gif.latex?%5Cfrac%7B0.5s%7D%7B-ln%281%5C%25%29%5Ccdot270%5COmega%7D%5Capprox402%5Cmu%20F"
+title="0.5s/-ln(1%)/270 ~ 402uF" />
 
 The theoretical minimum capacitance is when R is maximal, the prescaler is
 minimal, the timer value is minimal and we measure on the rising edge:

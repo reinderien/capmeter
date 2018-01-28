@@ -12,9 +12,7 @@ library(scales)
 
 R = t(c(270, 15e3, 1e6))    # all drive resistors
 colnames(R) = R
-taustable = 7               # taus to stabilization
 taufall = -log(1.1/5)       # taus from 5V to 1.1V
-taurise = -log(1-1.1/5)     # taus from 0V to 1.1V     
 f = 16e6                    # timer frequency
 s = matrix(2^c(0,3,6,8,10)) # all prescaler factors
 rownames(s) = s
@@ -27,19 +25,19 @@ tmax = 4e-6 * 2^16          # allows for nice range endings at a timer of 0xFFFF
 timermax = pmin(tmax*f/s, 2^16-1)
 
 # Based on the max time and timer, max caps for each R and s
-Cmax = (timermax*s/f/taustable) %*% (1/R)
+Cmax = (timermax*s/f/taufall) %*% (1/R)
 
 # Based on a timer count of 1, min caps for each R and s
-Cmin = (s/f/taurise) %*% (1/R)
+Cmin = (s/f/taufall) %*% (1/R)
 
 # various capacitors over the full range
 C = matrix(10^seq(-14, -2, by=1/24))
 rownames(C) = C  # sprintf('%.2e', C)
 
-# The stabilization time is two-dimensional, over C and R.
-tm = taustable*C %*% R
+# The capture time is two-dimensional, over C and R.
+tm = taufall*C %*% R
 
-# The stabilization timer value is three-dimensional, over C, R, and s.
+# The capture timer value is three-dimensional, over C, R, and s.
 timer = drop((f*tm) %o% (1/s))
 tmrcompare = aperm(drop(replicate(length(C),
                                   replicate(length(R), timermax))),
@@ -55,13 +53,13 @@ timer[timer>tmrcompare | timer<1] = NA
 # critical points are for each C where:
 #   timer crosses 1 or 2^16
 #   t crosses tmax
-# 6 = t/RC = tim*s/RC/16MHz
-# C = t/6R = tim*s/6R/16MHz
-# Ccrit = tmax/6R = 2^16*s/6R/16MHz
+# 1.514 = t/RC = tim*s/RC/16MHz
+# C = t/1.514/R = tim*s/1.514/R/16MHz
+# Ccrit = tmax/1.514/R = 2^16*s/1.514/R/16MHz
 crit = expand.grid(R=R,s=s)
-Ccrit = with(crit, c(s/f/R, 2^16*s/f/R, tmax/R))/taustable
+Ccrit = with(crit, c(s/f/R, 2^16*s/f/R, tmax/R))/taufall
 crit = expand.grid(R=R, s=s, C=Ccrit)
-crit$t = with(crit, taustable*R*C)
+crit$t = with(crit, taufall*R*C)
 crit$tmr = with(crit, t*f/s)
 eps=1e-6  # epsilon tolerance required to accommodate for float error
 # Only keep conformant rows.
@@ -132,8 +130,8 @@ tm_df = as.data.frame.table(tm)
 colnames(tm_df) = c('C', 'R', 't')
 tm_df$C = as.numeric(levels(tm_df$C))[tm_df$C]
 ggplot(tm_df, aes(x=C, y=t)) +
-   ggtitle(bquote(paste('Stabilisation time against R and C for ',
-                        t/tau == .(taustable)))) +
+   ggtitle(bquote(paste('Discharge time against R and C for ',
+                        t/tau == .(taufall)))) +
    geom_line(aes(colour=R, group=R)) +
    geom_hline(aes(yintercept=tmax)) +
    geom_text(data=data.frame(), size=3,
@@ -151,7 +149,7 @@ maxnames = data.frame(C=1e-14, s=factor(s), timer=timermax)
 
 ggplot(tmr_df, aes(x=C, y=timer, linetype=s)) +
    ggtitle(bquote(paste('Timer against prescaler, R and C for ',
-                        t/tau == .(taustable)))) +
+                        t/tau == .(taufall)))) +
    geom_line(aes(colour=R, group=interaction(R,s))) +
    geom_hline(data=maxdf, aes(yintercept=timer, linetype=s, group=s)) +
    geom_text(data=maxnames, size=3,
@@ -162,15 +160,14 @@ ggplot(tmr_df, aes(x=C, y=timer, linetype=s)) +
 
 # At the bottom end, cut off at typical parasitic capacitance
 ranges[ranges$tmr==1,] = data.frame(R=1e6, s=1, C=50e-12,
-                                    t=taustable*1e6*50e-12,
-                                    tmr=taustable*1e6*50e-12*f)
+                                    t=taufall*1e6*50e-12,
+                                    tmr=taufall*1e6*50e-12*f)
 ranges$s = factor(ranges$s)
 ranges$R = factor(ranges$R)
 ggplot(ranges, aes(x=C, y=tmr, colour=R, linetype=s,
                    group=interaction(R,s))) +
    ggtitle(bquote(paste('Timer against prescaler, R and C for ',
-                        t/tau == .(taustable), ' (chosen ranges)'))) +
+                        t/tau == .(taufall), ' (chosen ranges)'))) +
    geom_line() +
    scale_x_log_eng() + xaxis_text_vert() +
    scale_y_log_eng(radix=2)
-
