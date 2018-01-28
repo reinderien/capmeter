@@ -95,8 +95,8 @@ Digital I/O pins are 5V.
 Using an internal reference voltage of 1.1V for the comparator, the capture time
 to charge in tau-units is:
 
-<img src="https://latex.codecogs.com/gif.latex?\frac%7Bt_%7Bfall%7D%7D\tau=-ln\left(\frac%7B1.1%7D%7B5%7D\right)\approx1.514"
-title="tfall/tau = -ln(1.1/5) ~ 1.514" />
+<img src="https://latex.codecogs.com/gif.latex?\frac%7Bt_%7Bfall%7D%7D\tau=ln\left(\frac%7B5%7D%7B1.1%7D\right)\approx1.514"
+title="tfall/tau = ln(5/1.1) ~ 1.514" />
 
 Higher R slows down charge for small capacitance.
 Lower R is necessary to speed up charge for high capacitance.
@@ -122,10 +122,10 @@ Board has a 16MHz xtal connected to XTAL1/2. Timer 1 is 16-bit.
 We can switch between prescalers of 1, 8, 64, 256 and 1024 based on capacitance.
 
 The maximum capacitance measured is when R is minimal, the prescaler is maximal,
-the timer value is maximal, and discharge has stabilised:
+and the timer value is maximal:
 
-<img src="https://latex.codecogs.com/gif.latex?\frac%7B2^%7B16%7D\cdot1024%7D%7B16\textup%7BMHz%7D\cdot270\Omega\cdot7%7D\approx2.2\textup%7BmF%7D"
-title="2^16*1024/16MHz/270/7 ~ 2.2mF" />
+<img src="https://latex.codecogs.com/gif.latex?\frac%7B2^%7B16%7D\cdot1024%7D%7B16\textup%7BMHz%7D\cdot270\Omega\cdot%20ln(5/1.1)%7D\approx10\textup%7BmF%7D"
+title="2^16*1024/16MHz/270/ln(5/1.1) ~ 10mF" />
 
 We don't want to go too much higher, because that will affect the refresh rate
 of the result. We can improve discharge speed by decreasing R, but it cannot go
@@ -139,10 +139,10 @@ discharge to 1% or better, the measured capacitor would be at most:
 title="0.5s/-ln(1%)/270 ~ 402uF" />
 
 The theoretical minimum capacitance is when R is maximal, the prescaler is
-minimal, the timer value is minimal and we measure on the rising edge:
+minimal, and the timer value is minimal:
 
-<img src="https://latex.codecogs.com/gif.latex?\frac%7B1%7D%7B-16\textup%7BMHz%7D\cdot1M\Omega\cdot%20ln\left(1-1.1/5\right)%7D\approx0.25\textup%7BpF%7D"
-title="1/16MHz/1M/-ln(1-1.1/5) ~ 0.25pF" />
+<img src="https://latex.codecogs.com/gif.latex?\frac%7B1%7D%7B16\textup%7BMHz%7D\cdot1M\Omega\cdot%20ln\left(5/1.1\right)%7D\approx0.04\textup%7BpF%7D"
+title="1/16MHz/1M/ln(5/1.1) ~ 0.04pF" />
 
 but practical limitations of this hardware will not do anything useful for such
 a small capacitance. Parasitics alone are much higher than that. Just plugging a
