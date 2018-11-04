@@ -25,11 +25,11 @@ Setup
 
 A note on connections
 ---------------------
-For all connections try to use relatively short jumpers. A breadboard will work
-but a project board with soldered connections will introduce less parasitic
-capacitance. Parasitic or stray elements are not fatal, but will inflate
-measurements in the pF range. The board partially accommodates for this with the
-zeroing feature.
+For all connections try to use relatively short jumpers. A breadboard will
+work, but a project board with soldered connections (especially a proper
+"shield"-style board) will introduce less parasitic capacitance. Parasitic or
+stray elements are not fatal, but will inflate measurements in the pF range.
+The board partially accommodates for this with the zeroing feature.
 
 Portability
 -----------
