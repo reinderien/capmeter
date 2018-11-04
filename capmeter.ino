@@ -1,52 +1,131 @@
-// See https://github.com/reinderien/capmeter
-// This is the original version - half-second update, fairly cautious about power usage.
+/*
+Schematic
+---------
+             | Arduino Mega
+             | 2560 Rev2
+             |
+             | Arduino AVR
+             | Pin     Pin      Function    I/O
+             |
+    ---------| 5V      VCC      drive       out
+    |        |
+    == C     |
+    |        |
+    |--------|  5      PE3/AIN1 -comptor    in
+    |        |
+    |-270R---| A0      PF0      (dis)charge out or Z
+    |--10k---| A1      PF1      (dis)charge out or Z
+    |---1M---| A2      PF2      (dis)charge out or Z
+             |
+             |  0      PE0/RXD0 UART rx     in
+             |  1      PE1/TXD0 UART tx     out
+             |
+             | 13      PB7      LED         out
 
-#ifndef __AVR_ATmega2560__
-#error Arduino Mega 2560 required. For others, contact the author or take care during porting.
-#endif
+Calculations
+------------
 
-#define VERBOSE 1
+Digital I/O pins are 5V.
+Using an internal reference voltage of 1.1V for the comparator, the capture
+time to charge in tau-units is:
+ln(5/1.1) = 1.514
+
+Higher R slows down charge for small capacitance.
+Lower R is necessary to speed up charge for high capacitance.
+Too fast, and max capacitance will suffer.
+Too slow, and update speed will suffer.
+Minimum R is based on the max pin "test" current of 20mA (absolute max 40mA).
+5V/20mA = 250R, so use something bigger than that, like 270R.
+Choose maximum R based on the impedance of the pins and susceptibility to
+noise. Anywhere above 1M doesn't work well.
+
+Board has a 16MHz xtal connected to XTAL1/2. Timer 1 is 16-bit.
+We can switch between prescalers of 1, 8, 64, 256 and 1024 based on
+capacitance.
+
+The maximum capacitance measured is when R is minimal, the prescaler is maximal
+and the timer value is maximal:
+2^16*1024/16MHz / 270 / 1.514 = 10.3mF
+We don't want to go too much higher, because that will affect the refresh
+rate of the result. We can improve discharge speed by decreasing R, but it
+cannot go so low that the current exceeds the pin max.
+
+The minimum capacitance) is when R is maximal, the prescaler is minimal
+and the timer value is minimal:
+1/16e6 / 1M / 1.514 = 0.041 pF
+but practical limitations of this hardware will not do anything useful
+for such a small capacitance. Parasitics alone are much higher than that.
+
+To determine when to switch ranges, aim for a charge timer that runs up
+to somewhere near the 16-bit capacity to get decent resolution, choosing a
+good combination of R and prescaler.
+
+Reference links
+---------------
+
+Store: https://store.arduino.cc/usa/arduino-mega-2560-rev3 (but I have a rev2)
+Board: (R2 is closer to the R1 than the R3. The R3 was released in Nov 2011.)
+https://www.arduino.cc/en/uploads/Main/arduino-mega2560-schematic.pdf
+API: https://www.arduino.cc/en/Reference/HomePage
+Chip: http://www.microchip.com/wwwproducts/en/ATmega2560
+Spec: http://ww1.microchip.com/downloads/en/DeviceDoc/Atmel-2549-8-bit-AVR-Microcontroller-ATmega640-1280-1281-2560-2561_datasheet.pdf
+
+Compilation notes
+-----------------
+
+The actual entry point is main() in here (ignoring the bootloader):
+hardware/arduino/avr/cores/arduino/main.cpp
+
+The include chain is:
+Arduino.h
+  avr/io.h
+    avr/sfr_defs.h
+    Based on -mmcu=atmega2560, __AVR_ATmega2560__ is defined
+    avr/iom2560.h
+      iomxx0_1.h - this has most of the interesting SFR defs
+      
+We need to use a lot of the SFRs directly.
+
+When using tools such as avr-objdump, the architecture should be avr:6, and since
+link-time optimization is enabled, don't dump the .o; dump the .elf. Something like:
+
+avr-objdump -D -S capmeter.ino.elf > capmeter.asm
+*/
+
+#define DEBUG 1
 
 struct {
     float R;           // Resistor driven for this range
-    uint8_t pin_mask;  // PORTF mask for driving resistor
-    
     uint16_t prescale; // Timer 1 prescale factor
     uint8_t CS;        // CS1 bits to select this prescaler
+    uint8_t pin_mask;  // PORTF mask for driving resistor
     
-    // min = floor(2^16 * pres[n+1]/pres[n] * R[n]/R[n+1])
+    // min = 2^16/grow
     uint16_t min;      // ICR threshold below which range should grow
+    
+    // grow = scale[n]/scale[n+1] * res[n+1]/res[n]
+    uint8_t grow;      // time factor between this range and next
 } static const ranges[] = {
-    //  R pin  pres    CS    min
-    {  270, 1, 1024, B101, 16384},
-    {  270, 1,  256, B100, 16384},
-    {  270, 1,   64, B011,  8192},
-    {  270, 1,    8, B010,  8192},
-    {  270, 1,    1, B001,  9437},
-    { 15e3, 2,    8, B010,  8192},
-    { 15e3, 2,    1, B001,  7864},
-    {  1e6, 4,    8, B010,  8192},
-    {  1e6, 4,    1, B001,     0}
+    //   R  pres    CS pin   min  grow
+    {  270, 1024, B101, 1, 16384,    4},
+    {  270,  256, B100, 1, 16384,    4},
+    {  270,   64, B011, 1,  8192,    8},
+    {  270,    8, B010, 1,  8192,    8},
+    {  270,    1, B001, 1, 14156,    4},
+    { 10e3,    8, B010, 2,  8192,    8},
+    { 10e3,    1, B001, 2,  5243,   12},
+    {  1e6,    8, B010, 4,  8192,    8},
+    {  1e6,    1, B001, 4,     0, 0xFF}
 };
 
-static const uint8_t n_ranges = sizeof(ranges)/sizeof(*ranges);
 static uint8_t r_index = 4;
-static uint16_t captured;
-static volatile bool refresh_ready = false, measured = false;
-static bool zeroed = false;
-static float zerocap;
-
+static const uint8_t n_ranges = sizeof(ranges)/sizeof(*ranges);
 
 static void setup_power() {
     // Power reduction - see ch11.10.2
     // Initially, turn everything off. Selectively re-enable later.
     PRR0 = 0xFF;
     PRR1 = 0xFF;
-    
-    // Set sleep mode to idle - CPU will stop but timers will run
-    // and interrupts will wake us up. See ch11.2
-    SMCR = (B000 << SM0) | // sleep will idle 
-           (1 << SE);      // enable sleep support
 }
 
 static void setup_ports() {
@@ -72,10 +151,6 @@ static void setup_ports() {
     PORTE = B11110100; // PE all WPU except PE3 (AIN1) and UART0
     DIDR1 = (1 << AIN1D) | // Turn off digital input buffer for PE3 (AIN1)
             (0 << AIN0D);
-    
-    DDRF = B00000111;  // PF0-2 set to discharge initially; others unused
-    PORTF = 0xFF;      // All pullups or sourcing
-    DIDR0 = B00000111; // Turn off digital input buffer for ADC0-2 (PF0-2)
 }
 
 static void setup_refresh() {
@@ -97,15 +172,14 @@ static void setup_refresh() {
              (0 << ICES3)    | // Capture edge doesn't apply here
              (B01  << WGM32) | // CTC, OCR3A top
              (B100 << CS30);   // Start counting, 1/256 prescaler
-    
-    // Do NOT do this before initializing TCCR3A
     OCR3A = 31250; // 500ms * 16e6 / 256
+    TCCR3C = 0; // Do not force output compare
 }
 
 static void setup_serial() {
     PRR0 &= ~(1 << PRUSART0); // Power up USART0 for output to USB over pins 0+1
     Serial.begin(115200);     // UART at 115200 baud
-    #if VERBOSE
+    #if DEBUG
     Serial.println("Initialized");
     #endif
 }
@@ -114,21 +188,18 @@ static void setup_comptor() {
     /* Analog comparator: ch25, p265
     + connected to bandgap ref via ACSR.ACBG=1
     - connected to AIN1 (PE3 "pin 5") via ADCSRB.ACME=0
-    ACO output connected via ACIC=1 to input capture
-    Since the ACIS edge selector appears after ACO, and ACO itself is sent to
-    capture, and we don't use the AC interrupt itself, ACIS should not matter.
     
     Internal bandgap ref:
     stability described in ch12.3, p60
     shown as 1.1V in ch31.5, p360
-    */
+     */
     ACSR = (0 << ACD)  | // comparator enabled
            (1 << ACBG) | // select 1.1V bandgap ref for +
            (0 << ACO)  | // output - no effect
            (1 << ACI)  | // "clear" interrupt flag
            (0 << ACIE) | // comptor interrupt disabled
-           (1 << ACIC) | // enable timer capture
-           (B11 << ACIS0); // AC interrupt on rising edge
+           (0 << ACIC) | // disable timer capture
+           (B10 << ACIS0); // AC interrupt on falling edge
     ADCSRA = (0 << ADEN)  | // Disable ADC
              (0 << ADSC)  | // don't start conversion
              (0 << ADATE) | // no auto-trigger
@@ -141,103 +212,54 @@ static void setup_comptor() {
 }
 
 static void setup_capture() {
-    /* Input capture, ch17.6, p140
-    Uses timer/counter1 value in TCNT1 copied to ICR1
-    The docs claim that TICIE1 must be set to enable interrupt, but that's
-    a typo and ICIE1 (per p162) should be used instead.
-    ICF1 and TOV1 flags will be set and autocleared on their respective interrupt.
-    
+    /* 
     Timer 1, ch17, p133
     16-bit counter
     fclkI/O is described in ch10.2.2 p39
-    The Arduino source (wiring.c) configures this for "8-bit phase-correct PWM mode"
+    The Arduino source configures this for "8-bit phase-correct PWM mode"
     but let's go ahead and ignore that
     */
-    
+   
     PRR0 &= ~(1 << PRTIM1); // Turn on power for T1
-    TIMSK1 = (1 << ICIE1)  | // enable capture interrupt
-             (0 << OCIE1C) | // disable output compare interrupts
-             (0 << OCIE1B) |
-             (0 << OCIE1A) |
-             (1 << TOIE1);   // enable overflow interrupt
+           
     TCCR1A = (B00 << COM1A0) | // OC pins unused
              (B00 << COM1B0) |
              (B00 << COM1C0) |
              (B00 << WGM10);  // Normal count up, no clear (p145)
-    // Leave TCCR1B until we start capture and choose a prescaler
+    // Leave TCCR1B until we start capture
+    TCCR1C = 0; // Set FOC1=0: do not force a compare match
+    TIMSK1 = 0; // no interrupts
 }
 
 static void start_capture() {
-    // Todo - this needs some work
-    // ACSR &= ~(1 << ACD); // Enable comparator
-    
-    PRR0 &= ~(1 << PRTIM1); // Turn on power for T1
-    TCNT1 = 0;              // Clear timer value
+    TCNT1 = 0; // Clear timer value
+    TIFR1 = 0xFF; // clear interrupts
+
     // CS1 prescaler is based on the selected range
     TCCR1B = (0 << ICNC1)   | // Disable noise cancellation
-             (1 << ICES1)   | // ICP rising edge
+             (0 << ICES1)   | // ICP falling edge
              (B00 << WGM12) | // Normal count up, no clear (p145)
              (ranges[r_index].CS << CS10); // Start counting, internal clock source
 }
 
 static void stop_capture() {
-    // Todo - this needs some work
-    // ACSR |= 1 << ACD; // Disable comparator
-    
     TCCR1B = 0; // Stop clock by setting CS1=000
-    PRR0 |= 1 << PRTIM1; // Turn off power for T1
-}
-
-static void print_si(float x) {
-    static const char pre[] = "\0pnum kMG";
-    const char *p = pre+5;
-    for (; x < 1 && p[-1]; p--)
-        x *= 1e3;
-    for (; x >= 1e3 && p[1]; p++)
-        x /= 1e3;
-
-    uint8_t digs = 3;
-    for (float xsig = x; xsig > 1; xsig /= 10)
-        digs--;
-
-    Serial.print(x, digs);
-    Serial.print(*p);
 }
 
 static void print_cap(uint16_t timer) {
-    const float taus = 1.514128, // ln(5/1.1)
-                f = F_CPU/ranges[r_index].prescale,
-                t = ((float)timer)/f,
-                R = ranges[r_index].R;
-    
-    float C = t/taus/R;
-    if (!zeroed) {
-        if (r_index == n_ranges-1 && C < 100e-12) {
-            zerocap = C;
-            #if VERBOSE
-            {
-                Serial.print("Zeroing to ");
-                print_si(zerocap);
-                Serial.println('F');
-            }
-            #endif
-            zeroed = true;
-        }
-    }
-    if (zeroed) {
-        C -= zerocap;
-        if (C < 0) C = 0;
-    }
-    
-    #if VERBOSE
-    {
-        Serial.print("r_index="); Serial.print(r_index, DEC); Serial.print(' ');
-        Serial.print("f="); print_si(f); Serial.print("Hz ");
-        Serial.print("t="); print_si(t); Serial.print("s ");
-        Serial.print("timer="); Serial.print(timer, DEC); Serial.print(' ');
-        Serial.print("R="); print_si(R); Serial.print("ohm ");
-    }
+    #if DEBUG
+    Serial.print("TCNT1="); Serial.print(timer, DEC); Serial.print(' ');
     #endif
+    
+    const float taus = 1.514128, // ln(5/1.1)
+                t = ((float)timer)/F_CPU*ranges[r_index].prescale,
+                R = ranges[r_index].R;
+    float C = t/taus/R;
+
+    const static char pre[] = " munp";
+    const char *p;
+    for (p = pre; C < 1 && p[1]; p++)
+        C *= 1e3;
 
     Serial.print('C');
     if (timer == 0xFFFF) {
@@ -248,19 +270,33 @@ static void print_cap(uint16_t timer) {
         Serial.print('=');
         PORTB |= B10000000; // Set LED if we've measured a capacitance
     }
-    print_si(C); Serial.println('F');
+    Serial.print(C,3);
+    Serial.print(*p);
+    Serial.println('F');
+}
+
+static void dump() {
+    Serial.print("r_index="); Serial.print(r_index, DEC);
+    Serial.print(" ACSR=B");  Serial.print(ACSR, BIN);
+    Serial.print(" TIFR1=B"); Serial.print(TIFR1, BIN);
+    Serial.print(' ');
 }
 
 static void charge() {
     DDRF = ranges[r_index].pin_mask; // All inputs except current R
     
-    // reset the timer value
     start_capture();
     
     // Start charging the cap
     // 1: unused pins that stay as pullups
     // 0: either input-no-pullup, or sinking for current R to charge
     PORTF = B11111000;
+}
+
+static uint16_t wait_ac() {
+    while (!(ACSR & (1 << ACO))) // wait for AC high
+        if (TIFR1 & (1 << TOV1)) return 0xFFFF;
+    return TCNT1;
 }
 
 static void discharge() {
@@ -272,12 +308,14 @@ static void discharge() {
 
 static void rerange(uint16_t timer) {
     if (timer == 0xFFFF) { // overflow
-        if (r_index > 0)
+        if (r_index > 1) 
+            r_index = 1; // Quick-adjust to a fast timescale
+        else if (r_index > 0)
             r_index--;
     }
-    else { // increase for better resolution
-        if (timer < ranges[r_index].min)
-            r_index++; 
+    else {
+        for (; timer < ranges[r_index].min; timer *= ranges[r_index].grow)
+            r_index++;
     }
 }
 
@@ -292,20 +330,21 @@ void setup() {
     sei(); // re-enable interrupts
 }
 
+static volatile bool refresh_ready = false;
+
 void loop() {
     for (;;) { // do not allow serialEvent
         charge();
-        while (!measured)
-            __asm__("sleep");
-        measured = false;
-        uint16_t timer = captured;
-            
+        uint16_t timer = wait_ac();
         discharge();
 
+        #if DEBUG
+        dump();
+        #endif
+        
         print_cap(timer);
         rerange(timer);
-        while (!refresh_ready)
-            __asm__("sleep");
+        while (!refresh_ready);
         refresh_ready = false;
     }
 }
@@ -313,15 +352,4 @@ void loop() {
 ISR(TIMER3_COMPA_vect) { // refresh every 0.5s
     refresh_ready = true;
 }
-
-ISR(TIMER1_CAPT_vect) { // comparator capture (ok charge time)
-    captured = ICR1;
-    measured = true;
-}
-
-ISR(TIMER1_OVF_vect) { // timer overflow (took too long to charge) 
-    captured = 0xFFFF;
-    measured = true;
-}
-
 
