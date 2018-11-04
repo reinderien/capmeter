@@ -1,32 +1,28 @@
-// See https://github.com/reinderien/capmeter
-// This is the original version - half-second update, fairly cautious about power usage.
-
-#ifndef __AVR_ATmega2560__
-#error Arduino Mega 2560 required. For others, contact the author or take care during porting.
-#endif
-
 #define VERBOSE 1
+#define QUICK_RANGE 0  // Buggy
 
 struct {
     float R;           // Resistor driven for this range
-    uint8_t pin_mask;  // PORTF mask for driving resistor
-    
     uint16_t prescale; // Timer 1 prescale factor
     uint8_t CS;        // CS1 bits to select this prescaler
+    uint8_t pin_mask;  // PORTF mask for driving resistor
     
-    // min = floor(2^16 * pres[n+1]/pres[n] * R[n]/R[n+1])
+    // min = 2^16/grow
     uint16_t min;      // ICR threshold below which range should grow
+    
+    // grow = scale[n]/scale[n+1] * res[n+1]/res[n]
+    uint8_t grow;      // time factor between this range and next
 } static const ranges[] = {
-    //  R pin  pres    CS    min
-    {  270, 1, 1024, B101, 16384},
-    {  270, 1,  256, B100, 16384},
-    {  270, 1,   64, B011,  8192},
-    {  270, 1,    8, B010,  8192},
-    {  270, 1,    1, B001,  9437},
-    { 15e3, 2,    8, B010,  8192},
-    { 15e3, 2,    1, B001,  7864},
-    {  1e6, 4,    8, B010,  8192},
-    {  1e6, 4,    1, B001,     0}
+    //   R  pres    CS pin   min  grow
+    {  270, 1024, B101, 1, 16384,    4},
+    {  270,  256, B100, 1, 16384,    4},
+    {  270,   64, B011, 1,  8192,    8},
+    {  270,    8, B010, 1,  8192,    8},
+    {  270,    1, B001, 1, 14156,    4},
+    { 10e3,    8, B010, 2,  8192,    8},
+    { 10e3,    1, B001, 2,  5243,   12},
+    {  1e6,    8, B010, 4,  8192,    8},
+    {  1e6,    1, B001, 4,     0, 0xFF}
 };
 
 static const uint8_t n_ranges = sizeof(ranges)/sizeof(*ranges);
@@ -105,7 +101,7 @@ static void setup_refresh() {
 static void setup_serial() {
     PRR0 &= ~(1 << PRUSART0); // Power up USART0 for output to USB over pins 0+1
     Serial.begin(115200);     // UART at 115200 baud
-    #if VERBOSE
+    #if DEBUG
     Serial.println("Initialized");
     #endif
 }
@@ -115,13 +111,11 @@ static void setup_comptor() {
     + connected to bandgap ref via ACSR.ACBG=1
     - connected to AIN1 (PE3 "pin 5") via ADCSRB.ACME=0
     ACO output connected via ACIC=1 to input capture
-    Since the ACIS edge selector appears after ACO, and ACO itself is sent to
-    capture, and we don't use the AC interrupt itself, ACIS should not matter.
     
     Internal bandgap ref:
     stability described in ch12.3, p60
     shown as 1.1V in ch31.5, p360
-    */
+     */
     ACSR = (0 << ACD)  | // comparator enabled
            (1 << ACBG) | // select 1.1V bandgap ref for +
            (0 << ACO)  | // output - no effect
@@ -150,11 +144,12 @@ static void setup_capture() {
     Timer 1, ch17, p133
     16-bit counter
     fclkI/O is described in ch10.2.2 p39
-    The Arduino source (wiring.c) configures this for "8-bit phase-correct PWM mode"
+    The Arduino source configures this for "8-bit phase-correct PWM mode"
     but let's go ahead and ignore that
     */
-    
+   
     PRR0 &= ~(1 << PRTIM1); // Turn on power for T1
+    
     TIMSK1 = (1 << ICIE1)  | // enable capture interrupt
              (0 << OCIE1C) | // disable output compare interrupts
              (0 << OCIE1B) |
@@ -164,15 +159,14 @@ static void setup_capture() {
              (B00 << COM1B0) |
              (B00 << COM1C0) |
              (B00 << WGM10);  // Normal count up, no clear (p145)
-    // Leave TCCR1B until we start capture and choose a prescaler
+    // Leave TCCR1B until we start capture
 }
 
 static void start_capture() {
     // Todo - this needs some work
     // ACSR &= ~(1 << ACD); // Enable comparator
     
-    PRR0 &= ~(1 << PRTIM1); // Turn on power for T1
-    TCNT1 = 0;              // Clear timer value
+    TCNT1 = 0;    // Clear timer value
     // CS1 prescaler is based on the selected range
     TCCR1B = (0 << ICNC1)   | // Disable noise cancellation
              (1 << ICES1)   | // ICP rising edge
@@ -185,7 +179,6 @@ static void stop_capture() {
     // ACSR |= 1 << ACD; // Disable comparator
     
     TCCR1B = 0; // Stop clock by setting CS1=000
-    PRR0 |= 1 << PRTIM1; // Turn off power for T1
 }
 
 static void print_si(float x) {
@@ -196,10 +189,11 @@ static void print_si(float x) {
     for (; x >= 1e3 && p[1]; p++)
         x /= 1e3;
 
-    uint8_t digs = 3;
-    for (float xsig = x; xsig > 1; xsig /= 10)
-        digs--;
-
+    uint8_t digs;
+    if      (x >= 1e3) digs = 0;
+    else if (x >= 1e2) digs = 1;
+    else if (x >= 1e1) digs = 2;
+    else digs = 3;
     Serial.print(x, digs);
     Serial.print(*p);
 }
@@ -228,14 +222,15 @@ static void print_cap(uint16_t timer) {
         C -= zerocap;
         if (C < 0) C = 0;
     }
-    
+        
+
     #if VERBOSE
     {
         Serial.print("r_index="); Serial.print(r_index, DEC); Serial.print(' ');
         Serial.print("f="); print_si(f); Serial.print("Hz ");
         Serial.print("t="); print_si(t); Serial.print("s ");
         Serial.print("timer="); Serial.print(timer, DEC); Serial.print(' ');
-        Serial.print("R="); print_si(R); Serial.print("ohm ");
+        Serial.print("R="); print_si(R); Serial.print("Ω ");
     }
     #endif
 
@@ -254,7 +249,6 @@ static void print_cap(uint16_t timer) {
 static void charge() {
     DDRF = ranges[r_index].pin_mask; // All inputs except current R
     
-    // reset the timer value
     start_capture();
     
     // Start charging the cap
@@ -271,14 +265,31 @@ static void discharge() {
 }
 
 static void rerange(uint16_t timer) {
-    if (timer == 0xFFFF) { // overflow
-        if (r_index > 0)
-            r_index--;
+    #if QUICK_RANGE // kind of broken
+    {
+        if (timer == 0xFFFF) { // overflow
+            if (r_index > 1) 
+                r_index = 1; // Quick-adjust to a fast timescale
+            else if (r_index > 0)
+                r_index--;
+        }
+        else {
+            for (; timer < ranges[r_index].min; timer *= ranges[r_index].grow)
+                r_index++;
+        }
     }
-    else { // increase for better resolution
-        if (timer < ranges[r_index].min)
-            r_index++; 
+    #else
+    {
+        if (timer == 0xFFFF) { // overflow
+            if (r_index > 0)
+                r_index--;
+        }
+        else { // increase for better resolution
+            if (timer < ranges[r_index].min)
+                r_index++; 
+        }
     }
+    #endif
 }
 
 void setup() {
@@ -323,5 +334,4 @@ ISR(TIMER1_OVF_vect) { // timer overflow (took too long to charge)
     captured = 0xFFFF;
     measured = true;
 }
-
 
