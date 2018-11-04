@@ -1,3 +1,7 @@
-Rplots.pdf
-*.orig
 .idea/
+Rplots.pdf
+*.asm
+*.bat
+*.d
+*.ii
+*.orig
