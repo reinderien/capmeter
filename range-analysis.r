@@ -171,3 +171,5 @@ ggplot(ranges, aes(x=C, y=tmr, colour=R, linetype=s,
    geom_line() +
    scale_x_log_eng() + xaxis_text_vert() +
    scale_y_log_eng(radix=2)
+
+ggsave('Rplots.pdf')
