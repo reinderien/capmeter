@@ -11,6 +11,22 @@ output. It could be adapted to use a battery pack and an integrated display, or
 could be used as-is with a small tablet or cell phone capable of hosting USB
 serial TTY devices.
 
+Related Work
+------------
+
+Setups such as that of
+[Jonathan Nethercott](http://wordpress.codewrite.co.uk/pic/2014/01/25/capacitance-meter-mk-ii)
+have both advantages and disadvantages compared to this one. The main advantage
+with his is that fewer external parts are required. Disadvantages include 
+poorer resolution.
+
+[Nick Gammon](http://www.gammon.com.au/forum/?id=12075) and
+[Circuit Basics](http://www.circuitbasics.com/how-to-make-an-arduino-capacitance-meter)
+have yet more variants.
+
+The design presented below pays a little more attention to hardware specific to
+the AT2560, and uses fairly little Arduino helper library code.
+
 Setup
 =====
 
