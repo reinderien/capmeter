@@ -106,7 +106,7 @@ static void setup_serial() {
     PRR0 &= ~(1 << PRUSART0); // Power up USART0 for output to USB over pins 0+1
     Serial.begin(115200);     // UART at 115200 baud
     #if VERBOSE
-    Serial.println("Initialized");
+    Serial.println("\nInitialized");
     #endif
 }
 
@@ -216,7 +216,7 @@ static void print_cap(uint16_t timer) {
             zerocap = C;
             #if VERBOSE
             {
-                Serial.print("Zeroing to ");
+                Serial.print("\nZeroing to ");
                 print_si(zerocap);
                 Serial.println('F');
             }
@@ -248,7 +248,7 @@ static void print_cap(uint16_t timer) {
         Serial.print('=');
         PORTB |= B10000000; // Set LED if we've measured a capacitance
     }
-    print_si(C); Serial.println('F');
+    print_si(C); Serial.print("F    \r");
 }
 
 static void charge() {
