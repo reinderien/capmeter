@@ -2,6 +2,7 @@
 options(echo=F)
 
 library(ggplot2)
+library(gridExtra)
 library(scales)
 
 
@@ -129,7 +130,8 @@ xaxis_text_vert = function() {
 tm_df = as.data.frame.table(tm)
 colnames(tm_df) = c('C', 'R', 't')
 tm_df$C = as.numeric(levels(tm_df$C))[tm_df$C]
-ggplot(tm_df, aes(x=C, y=t)) +
+
+gp_disch = ggplot(tm_df, aes(x=C, y=t)) +
    ggtitle(bquote(paste('Discharge time against R and C for ',
                         t/tau == .(taufall)))) +
    geom_line(aes(colour=R, group=R)) +
@@ -147,7 +149,7 @@ tmr_df$C = as.numeric(levels(tmr_df$C))[tmr_df$C]
 maxdf = data.frame(timer=timermax, s=factor(s))
 maxnames = data.frame(C=1e-14, s=factor(s), timer=timermax)
 
-ggplot(tmr_df, aes(x=C, y=timer, linetype=s)) +
+gp_timer = ggplot(tmr_df, aes(x=C, y=timer, linetype=s)) +
    ggtitle(bquote(paste('Timer against prescaler, R and C for ',
                         t/tau == .(taufall)))) +
    geom_line(aes(colour=R, group=interaction(R,s))) +
@@ -164,7 +166,7 @@ ranges[ranges$tmr==1,] = data.frame(R=1e6, s=1, C=50e-12,
                                     tmr=taufall*1e6*50e-12*f)
 ranges$s = factor(ranges$s)
 ranges$R = factor(ranges$R)
-ggplot(ranges, aes(x=C, y=tmr, colour=R, linetype=s,
+gp_chosen = ggplot(ranges, aes(x=C, y=tmr, colour=R, linetype=s,
                    group=interaction(R,s))) +
    ggtitle(bquote(paste('Timer against prescaler, R and C for ',
                         t/tau == .(taufall), ' (chosen ranges)'))) +
@@ -172,4 +174,9 @@ ggplot(ranges, aes(x=C, y=tmr, colour=R, linetype=s,
    scale_x_log_eng() + xaxis_text_vert() +
    scale_y_log_eng(radix=2)
 
-ggsave('Rplots.pdf')
+# This ridiculousness is needed by R on Windows
+plots = list()
+plots[[1]] = gp_disch
+plots[[2]] = gp_timer
+plots[[3]] = gp_chosen
+ggsave('Rplots.pdf', marrangeGrob(grobs=plots, nrow=1, ncol=1))
